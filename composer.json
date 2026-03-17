@@ -1,0 +1,54 @@
+{
+  "name": "puntopost/php-sdk",
+  "description": "Official PHP SDK for the PuntoPost parcel delivery API",
+  "type": "library",
+  "license": "MIT",
+  "keywords": [
+    "puntopost",
+    "parcel",
+    "shipment",
+    "delivery",
+    "logistics",
+    "sdk",
+    "api",
+    "pudo",
+    "mexico"
+  ],
+  "homepage": "https://puntopost.mx",
+  "authors": [
+    {
+      "name": "PuntoPost",
+      "homepage": "https://puntopost.mx",
+      "role": "Developer"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/puntopost/php-sdk/issues",
+    "source": "https://github.com/puntopost/php-sdk"
+  },
+  "require": {
+    "php": ">=7.4",
+    "ext-curl": "*",
+    "ext-json": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.6",
+    "symplify/easy-coding-standard": "^9.4",
+    "phpstan/phpstan": "^1.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "PuntoPost\\Sdk\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "PuntoPost\\Sdk\\Tests\\": "tests/"
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true,
+  "config": {
+    "sort-packages": true
+  }
+}
