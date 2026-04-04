@@ -5,7 +5,7 @@ DOCKER_RUN_PHP74        = docker run --rm -v "$(PWD):/app" -w /app $(PHP74_IMAGE
 DOCKER_RUN_PHP_LATEST   = docker run --rm -v "$(PWD):/app" -w /app $(PHP_LATEST_IMAGE)
 DOCKER_RUN_COMPOSER     = docker run --rm -v "$(PWD):/app" -w /app $(COMPOSER_IMAGE)
 
-.PHONY: install validate check lint lint-latest test test-latest ecs ecs-fix phpstan sandbox
+.PHONY: install validate check lint lint-latest test test-latest ecs ecs-fix phpstan sandbox bash
 
 check: ecs phpstan validate lint lint-latest test test-latest
 
@@ -48,3 +48,6 @@ phpstan:
 sandbox:
 	@echo "Running sandbox test..."
 	@$(DOCKER_RUN_PHP74) php public/test.php
+
+bash:
+	@docker run --rm -it -v "$(PWD):/app" -w /app $(COMPOSER_IMAGE) sh

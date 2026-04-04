@@ -156,7 +156,7 @@ abstract class AbstractApi
         return [
             'Accept' => 'application/json',
             PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE,
-            PuntoPostClient::CLIENT_PHP_VERSION_HEADER_NAME => PHP_VERSION,
+            PuntoPostClient::RUNTIME_HEADER_NAME => PHP_VERSION,
         ];
     }
 }

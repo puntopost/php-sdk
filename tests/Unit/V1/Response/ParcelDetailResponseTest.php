@@ -23,7 +23,7 @@ class ParcelDetailResponseTest extends TestCase
             'sender' => ['first_name' => 'Juan', 'last_name' => 'G', 'email' => 'j@e.com'],
             'receiver' => ['first_name' => 'Ana', 'last_name' => 'L', 'email' => 'a@e.com'],
             'destination' => ['id' => 'D1', 'external_id' => 'E1', 'type' => 'pudo', 'name' => 'N',
-                'description' => '', 'address' => ['postal_code' => '06600', 'city' => 'CDMX', 'address' => 'Calle 1', 'coordinate' => ['latitude' => 19.4326, 'longitude' => -99.1332]], 'schedule' => '', 'enabled' => true, 'created_at' => '2024-01-01T00:00:00+00:00'],
+                'description' => '', 'address' => ['postal_code' => '06600', 'city' => 'CDMX', 'address' => 'Calle 1', 'coordinate' => ['latitude' => 19.4326, 'longitude' => -99.1332]], 'schedule' => '', 'schedule_items' => [], 'phone' => '', 'enabled' => true, 'created_at' => '2024-01-01T00:00:00+00:00'],
             'created_at' => '2024-01-15T10:00:00+00:00',
         ];
     }
