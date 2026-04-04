@@ -19,7 +19,7 @@ class MerchantTest extends TestCase
     public function testConstructorStoresValues(): void
     {
         $user = new User('UID1', 'jdoe', 'j@e.com', UserType::from('merchant'), true, new DateTimeImmutable('2024-01-01T00:00:00+00:00'));
-        $pudo = new PickUpDropOff('P1', 'EP1', 'Central', '', new Address('06600', 'CDMX', 'Calle 1', new Coordinate(19.4326, -99.1332)), 'Lun-Vie', true, new DateTimeImmutable('2024-01-01T00:00:00+00:00'));
+        $pudo = new PickUpDropOff('P1', 'EP1', 'pudo', 'Central', '', new Address('06600', 'CDMX', 'Calle 1', new Coordinate(19.4326, -99.1332)), 'Lun-Vie', [], '', true, new DateTimeImmutable('2024-01-01T00:00:00+00:00'));
         $merchant = new Merchant('MID1', 'Mi Tienda', true, false, null, '2024-01-01T00:00:00+00:00', [$user], [$pudo]);
 
         $this->assertSame('MID1', $merchant->getId());
@@ -44,7 +44,7 @@ class MerchantTest extends TestCase
                 ['id' => 'UID1', 'username' => 'jdoe', 'email' => 'j@e.com', 'type' => 'merchant', 'enabled' => true, 'created_at' => '2024-01-01T00:00:00+00:00'],
             ],
             'pudos' => [
-                ['id' => 'P1', 'external_id' => 'EP1', 'name' => 'Central', 'description' => '', 'address' => ['postal_code' => '06600', 'city' => 'CDMX', 'address' => 'Calle 1', 'coordinate' => ['latitude' => 19.4326, 'longitude' => -99.1332]], 'schedule' => 'Lun-Vie', 'enabled' => true, 'created_at' => '2024-01-01T00:00:00+00:00'],
+                ['id' => 'P1', 'external_id' => 'EP1', 'type' => 'pudo', 'name' => 'Central', 'description' => '', 'address' => ['postal_code' => '06600', 'city' => 'CDMX', 'address' => 'Calle 1', 'coordinate' => ['latitude' => 19.4326, 'longitude' => -99.1332]], 'schedule' => 'Lun-Vie', 'schedule_items' => [], 'phone' => '', 'enabled' => true, 'created_at' => '2024-01-01T00:00:00+00:00'],
             ],
         ]);
 

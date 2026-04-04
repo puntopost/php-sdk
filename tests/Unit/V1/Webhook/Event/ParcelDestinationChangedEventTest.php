@@ -18,6 +18,7 @@ class ParcelDestinationChangedEventTest extends TestCase
             'destination' => [
                 'id' => '30000000000000000000000004',
                 'external_id' => 'MX000003',
+                'type' => 'pudo',
                 'name' => "John's Shop",
                 'description' => 'Grocery',
                 'address' => [
@@ -27,6 +28,8 @@ class ParcelDestinationChangedEventTest extends TestCase
                     'coordinate' => ['latitude' => 31.7035, 'longitude' => -106.4350],
                 ],
                 'schedule' => 'Lun, Mie, Vie: 09:30 - 17:00.',
+                'schedule_items' => [],
+                'phone' => '+523334445556',
                 'enabled' => true,
                 'created_at' => '2025-01-13T07:37:13-06:00',
             ],

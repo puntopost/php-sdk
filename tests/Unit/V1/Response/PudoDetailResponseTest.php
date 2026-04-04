@@ -19,7 +19,7 @@ class PudoDetailResponseTest extends TestCase
             'id' => 'PUDO_001', 'external_id' => 'MX001', 'type' => 'pudo',
             'name' => 'PUDO Central', 'description' => 'Punto de entrega',
             'address' => ['postal_code' => '06600', 'city' => 'CDMX', 'address' => 'Calle 1', 'coordinate' => ['latitude' => 19.4326, 'longitude' => -99.1332]],
-            'schedule' => 'Lun-Vie: 09:00-18:00', 'enabled' => true,
+            'schedule' => 'Lun-Vie: 09:00-18:00', 'schedule_items' => [], 'phone' => '+523334445556', 'enabled' => true,
             'created_at' => '2024-01-15T00:00:00+00:00',
         ];
     }

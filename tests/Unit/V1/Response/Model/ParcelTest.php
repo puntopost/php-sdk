@@ -33,7 +33,7 @@ class ParcelTest extends TestCase
             'receiver' => ['first_name' => 'Ana', 'last_name' => 'López', 'email' => 'a@e.com'],
             'destination' => ['id' => 'DEST', 'external_id' => 'ED1', 'type' => 'pudo', 'name' => 'PUDO Dest',
                 'description' => '', 'address' => ['postal_code' => '06600', 'city' => 'CDMX', 'address' => 'Calle 2', 'coordinate' => ['latitude' => 19.4326, 'longitude' => -99.1332]],
-                'schedule' => 'Lun-Vie', 'enabled' => true, 'created_at' => '2024-01-01T00:00:00+00:00'],
+                'schedule' => 'Lun-Vie', 'schedule_items' => [], 'phone' => '', 'enabled' => true, 'created_at' => '2024-01-01T00:00:00+00:00'],
             'created_at' => '2024-01-15T10:00:00+00:00',
         ];
     }
@@ -69,7 +69,7 @@ class ParcelTest extends TestCase
         ];
         $data['origin'] = ['id' => 'ORIG', 'external_id' => 'EO1', 'type' => 'pudo', 'name' => 'PUDO Orig',
             'description' => '', 'address' => ['postal_code' => '64000', 'city' => 'MTY', 'address' => 'Calle 1', 'coordinate' => ['latitude' => 25.67, 'longitude' => -100.32]],
-            'schedule' => 'Lun-Vie', 'enabled' => true, 'created_at' => '2024-01-01T00:00:00+00:00'];
+            'schedule' => 'Lun-Vie', 'schedule_items' => [], 'phone' => '', 'enabled' => true, 'created_at' => '2024-01-01T00:00:00+00:00'];
         $data['expire_at'] = '2024-02-15T10:00:00+00:00';
 
         $parcel = Parcel::fromArray($data);
