@@ -32,13 +32,13 @@ use PuntoPost\Sdk\V1\Response\MerchantDetailResponse;
 use PuntoPost\Sdk\V1\Response\Model\Address;
 use PuntoPost\Sdk\V1\Response\Model\Coordinate;
 use PuntoPost\Sdk\V1\Response\Model\Enum\ParcelStatus;
-
 use PuntoPost\Sdk\V1\Response\Model\Enum\UserType;
 use PuntoPost\Sdk\V1\Response\Model\Merchant;
 use PuntoPost\Sdk\V1\Response\Model\Parcel;
 use PuntoPost\Sdk\V1\Response\Model\ParcelContent;
 use PuntoPost\Sdk\V1\Response\Model\Person;
 use PuntoPost\Sdk\V1\Response\Model\PickUpDropOff;
+use PuntoPost\Sdk\V1\Response\Model\ScheduleItem;
 use PuntoPost\Sdk\V1\Response\Model\StatusHistoryEntry;
 use PuntoPost\Sdk\V1\Response\Model\User;
 use PuntoPost\Sdk\V1\Response\ParcelDetailResponse;
@@ -54,7 +54,7 @@ class MerchantApiTest extends TestCase
     protected function setUp(): void
     {
         $this->httpClient = new MockHttpClient();
-        $this->sut = new MerchantApi($this->httpClient, 'https://api.example.com');
+        $this->sut = new MerchantApi($this->httpClient, MockHttpClient::BASE_URL);
         $this->sut->setToken('test-jwt-token');
     }
 
@@ -77,7 +77,17 @@ class MerchantApiTest extends TestCase
                     'id' => 'PUDO_001', 'external_id' => 'MX001', 'type' => 'pudo',
                     'name' => 'PUDO Central', 'description' => 'Punto de entrega central',
                     'address' => ['postal_code' => '06600', 'city' => 'CDMX', 'address' => 'Calle 1 #123', 'coordinate' => ['latitude' => 19.4326, 'longitude' => -99.1332]],
-                    'schedule' => 'Lun-Vie: 09:00-18:00', 'enabled' => true, 'created_at' => '2023-01-01T00:00:00+00:00',
+                    'schedule' => 'Lun-Vie: 09:00-18:00',
+                    'schedule_items' => [
+                        ['day' => 'mon', 'start' => '09:00', 'end' => '18:00'],
+                        ['day' => 'tue', 'start' => '09:00', 'end' => '18:00'],
+                        ['day' => 'wed', 'start' => '09:00', 'end' => '18:00'],
+                        ['day' => 'thu', 'start' => '09:00', 'end' => '18:00'],
+                        ['day' => 'fri', 'start' => '09:00', 'end' => '18:00'],
+                    ],
+                    'phone' => '+523334445556',
+                    'enabled' => true,
+                    'created_at' => '2023-01-01T00:00:00+00:00',
                 ],
                 'created_at' => '2024-01-01T10:00:00+00:00',
                 'expire_at' => null,
@@ -92,7 +102,12 @@ class MerchantApiTest extends TestCase
             'method' => 'GET',
             'url' => 'https://api.example.com/api/merchant/v1/parcels/MXT0000000001',
             'body' => null,
-            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::CLIENT_PHP_VERSION_HEADER_NAME => PHP_VERSION, 'Authorization' => 'Bearer test-jwt-token'],
+            'headers' => [
+                'Accept' => 'application/json',
+                PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE,
+                PuntoPostClient::RUNTIME_HEADER_NAME => PHP_VERSION,
+                'Authorization' => 'Bearer test-jwt-token'
+            ],
         ];
         $expectedResponse = new ParcelDetailResponse(new Parcel(
             'PARCEL_001',
@@ -100,13 +115,13 @@ class MerchantApiTest extends TestCase
             'https://example.com/qr/MXT0000000001.png',
             null,
             null,
-            new ParcelContent('Libro', 1.5),
+            new ParcelContent('Libro', 1.5, null, null),
             ParcelStatus::from('created'),
             [new StatusHistoryEntry(ParcelStatus::from('created'), Date::from('2024-01-01T10:00:00+00:00'))],
             new Person('Juan', 'Garcia', 'juan@example.com', null, null),
             new Person('Ana', 'Lopez', 'ana@example.com', null, null),
             null,
-            new PickUpDropOff('PUDO_001', 'MX001', 'PUDO Central', 'Punto de entrega central', new Address('06600', 'CDMX', 'Calle 1 #123', new Coordinate(19.4326, -99.1332)), 'Lun-Vie: 09:00-18:00', true, Date::from('2023-01-01T00:00:00+00:00')),
+            new PickUpDropOff('PUDO_001', 'MX001', 'pudo', 'PUDO Central', 'Punto de entrega central', new Address('06600', 'CDMX', 'Calle 1 #123', new Coordinate(19.4326, -99.1332)), 'Lun-Vie: 09:00-18:00', [new ScheduleItem('mon', '09:00', '18:00'), new ScheduleItem('tue', '09:00', '18:00'), new ScheduleItem('wed', '09:00', '18:00'), new ScheduleItem('thu', '09:00', '18:00'), new ScheduleItem('fri', '09:00', '18:00')], '+523334445556', true, Date::from('2023-01-01T00:00:00+00:00')),
             Date::from('2024-01-01T10:00:00+00:00'),
             null
         ));
@@ -125,7 +140,7 @@ class MerchantApiTest extends TestCase
             'method' => 'DELETE',
             'url' => 'https://api.example.com/api/merchant/v1/parcels/MXT0000000001',
             'body' => null,
-            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::CLIENT_PHP_VERSION_HEADER_NAME => PHP_VERSION, 'Authorization' => 'Bearer test-jwt-token'],
+            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::RUNTIME_HEADER_NAME => PHP_VERSION, 'Authorization' => 'Bearer test-jwt-token'],
         ];
         $expectedResponse = new SuccessResponse(204);
 
@@ -143,7 +158,7 @@ class MerchantApiTest extends TestCase
             'method' => 'PUT',
             'url' => 'https://api.example.com/api/merchant/v1/parcels/MXT0000000001/ready',
             'body' => null,
-            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::CLIENT_PHP_VERSION_HEADER_NAME => PHP_VERSION, 'Authorization' => 'Bearer test-jwt-token'],
+            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::RUNTIME_HEADER_NAME => PHP_VERSION, 'Authorization' => 'Bearer test-jwt-token'],
         ];
         $expectedResponse = new SuccessResponse(204);
 
@@ -180,7 +195,7 @@ class MerchantApiTest extends TestCase
                     'id' => 'PUDO_001', 'external_id' => 'MX001', 'type' => 'pudo',
                     'name' => 'PUDO Central', 'description' => 'Punto de entrega central',
                     'address' => ['postal_code' => '06600', 'city' => 'CDMX', 'address' => 'Calle 1 #123', 'coordinate' => ['latitude' => 19.4326, 'longitude' => -99.1332]],
-                    'schedule' => 'Lun-Vie: 09:00-18:00', 'enabled' => true, 'created_at' => '2023-01-01T00:00:00+00:00',
+                    'schedule' => 'Lun-Vie: 09:00-18:00', 'schedule_items' => [['day' => 'mon', 'start' => '09:00', 'end' => '18:00'], ['day' => 'tue', 'start' => '09:00', 'end' => '18:00'], ['day' => 'wed', 'start' => '09:00', 'end' => '18:00'], ['day' => 'thu', 'start' => '09:00', 'end' => '18:00'], ['day' => 'fri', 'start' => '09:00', 'end' => '18:00']], 'phone' => '+523334445556', 'enabled' => true, 'created_at' => '2023-01-01T00:00:00+00:00',
                 ],
                 'created_at' => '2024-01-01T10:00:00+00:00',
                 'expire_at' => null,
@@ -195,7 +210,7 @@ class MerchantApiTest extends TestCase
             'method' => 'POST',
             'url' => 'https://api.example.com/api/merchant/v1/MERCHANT_001/parcels',
             'body' => '{"content":{"description":"Libro","value":250,"currency":"MXN","weight_kg":1.5},"sender":{"first_name":"Juan","last_name":"Garcia","email":"juan@example.com","phone":"+525512345678","postal_code":"06600"},"receiver":{"first_name":"Ana","last_name":"Lopez","email":"ana@example.com","phone":"+525598765432","postal_code":"44100"},"destination_id":"PUDO_001"}',
-            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::CLIENT_PHP_VERSION_HEADER_NAME => PHP_VERSION, 'Content-Type' => 'application/json', 'Authorization' => 'Bearer test-jwt-token'],
+            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::RUNTIME_HEADER_NAME => PHP_VERSION, 'Content-Type' => 'application/json', 'Authorization' => 'Bearer test-jwt-token'],
         ];
         $expectedResponse = new ParcelDetailResponse(new Parcel(
             'PARCEL_001',
@@ -203,13 +218,13 @@ class MerchantApiTest extends TestCase
             'https://example.com/qr/MXT0000000001.png',
             null,
             null,
-            new ParcelContent('Libro', 1.5),
+            new ParcelContent('Libro', 1.5, null, null),
             ParcelStatus::from('created'),
             [new StatusHistoryEntry(ParcelStatus::from('created'), Date::from('2024-01-01T10:00:00+00:00'))],
             new Person('Juan', 'Garcia', 'juan@example.com', null, null),
             new Person('Ana', 'Lopez', 'ana@example.com', null, null),
             null,
-            new PickUpDropOff('PUDO_001', 'MX001', 'PUDO Central', 'Punto de entrega central', new Address('06600', 'CDMX', 'Calle 1 #123', new Coordinate(19.4326, -99.1332)), 'Lun-Vie: 09:00-18:00', true, Date::from('2023-01-01T00:00:00+00:00')),
+            new PickUpDropOff('PUDO_001', 'MX001', 'pudo', 'PUDO Central', 'Punto de entrega central', new Address('06600', 'CDMX', 'Calle 1 #123', new Coordinate(19.4326, -99.1332)), 'Lun-Vie: 09:00-18:00', [new ScheduleItem('mon', '09:00', '18:00'), new ScheduleItem('tue', '09:00', '18:00'), new ScheduleItem('wed', '09:00', '18:00'), new ScheduleItem('thu', '09:00', '18:00'), new ScheduleItem('fri', '09:00', '18:00')], '+523334445556', true, Date::from('2023-01-01T00:00:00+00:00')),
             Date::from('2024-01-01T10:00:00+00:00'),
             null
         ));
@@ -246,13 +261,13 @@ class MerchantApiTest extends TestCase
                     'id' => 'PUDO_ORIGIN_001', 'external_id' => 'MX002', 'type' => 'merchant',
                     'name' => 'Sucursal Origen', 'description' => 'Origen',
                     'address' => ['postal_code' => '06600', 'city' => 'CDMX', 'address' => 'Calle 2 #456', 'coordinate' => ['latitude' => 19.4326, 'longitude' => -99.1332]],
-                    'schedule' => 'Lun-Vie: 09:00-18:00', 'enabled' => true, 'created_at' => '2023-01-01T00:00:00+00:00',
+                    'schedule' => 'Lun-Vie: 09:00-18:00', 'schedule_items' => [['day' => 'mon', 'start' => '09:00', 'end' => '18:00'], ['day' => 'tue', 'start' => '09:00', 'end' => '18:00'], ['day' => 'wed', 'start' => '09:00', 'end' => '18:00'], ['day' => 'thu', 'start' => '09:00', 'end' => '18:00'], ['day' => 'fri', 'start' => '09:00', 'end' => '18:00']], 'phone' => '+523334445556', 'enabled' => true, 'created_at' => '2023-01-01T00:00:00+00:00',
                 ],
                 'destination' => [
                     'id' => 'PUDO_001', 'external_id' => 'MX001', 'type' => 'pudo',
                     'name' => 'PUDO Central', 'description' => 'Punto de entrega central',
                     'address' => ['postal_code' => '44100', 'city' => 'Guadalajara', 'address' => 'Calle 1 #123', 'coordinate' => ['latitude' => 20.67, 'longitude' => -103.35]],
-                    'schedule' => 'Lun-Vie: 09:00-18:00', 'enabled' => true, 'created_at' => '2023-01-01T00:00:00+00:00',
+                    'schedule' => 'Lun-Vie: 09:00-18:00', 'schedule_items' => [['day' => 'mon', 'start' => '09:00', 'end' => '18:00'], ['day' => 'tue', 'start' => '09:00', 'end' => '18:00'], ['day' => 'wed', 'start' => '09:00', 'end' => '18:00'], ['day' => 'thu', 'start' => '09:00', 'end' => '18:00'], ['day' => 'fri', 'start' => '09:00', 'end' => '18:00']], 'phone' => '+523334445556', 'enabled' => true, 'created_at' => '2023-01-01T00:00:00+00:00',
                 ],
                 'created_at' => '2024-01-01T10:00:00+00:00',
                 'expire_at' => null,
@@ -267,7 +282,7 @@ class MerchantApiTest extends TestCase
             'method' => 'POST',
             'url' => 'https://api.example.com/api/merchant/v1/MERCHANT_001/parcels/b2c',
             'body' => '{"content":{"description":"Celular","value":3500,"currency":"MXN"},"receiver":{"first_name":"Ana","last_name":"Lopez","email":"ana@example.com","phone":"+525598765432"},"origin_id":"PUDO_ORIGIN_001","destination_id":"PUDO_001"}',
-            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::CLIENT_PHP_VERSION_HEADER_NAME => PHP_VERSION, 'Content-Type' => 'application/json', 'Authorization' => 'Bearer test-jwt-token'],
+            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::RUNTIME_HEADER_NAME => PHP_VERSION, 'Content-Type' => 'application/json', 'Authorization' => 'Bearer test-jwt-token'],
         ];
         $expectedResponse = new ParcelDetailResponse(new Parcel(
             'PARCEL_001',
@@ -275,13 +290,13 @@ class MerchantApiTest extends TestCase
             'https://example.com/qr/MXT0000000001.png',
             null,
             null,
-            new ParcelContent('Celular', null),
+            new ParcelContent('Celular', null, null, null),
             ParcelStatus::from('created'),
             [new StatusHistoryEntry(ParcelStatus::from('created'), Date::from('2024-01-01T10:00:00+00:00'))],
             new Person('Merchant', 'Bot', 'bot@merchant.com', null, null),
             new Person('Ana', 'Lopez', 'ana@example.com', null, null),
-            new PickUpDropOff('PUDO_ORIGIN_001', 'MX002', 'Sucursal Origen', 'Origen', new Address('06600', 'CDMX', 'Calle 2 #456', new Coordinate(19.4326, -99.1332)), 'Lun-Vie: 09:00-18:00', true, Date::from('2023-01-01T00:00:00+00:00')),
-            new PickUpDropOff('PUDO_001', 'MX001', 'PUDO Central', 'Punto de entrega central', new Address('44100', 'Guadalajara', 'Calle 1 #123', new Coordinate(20.67, -103.35)), 'Lun-Vie: 09:00-18:00', true, Date::from('2023-01-01T00:00:00+00:00')),
+            new PickUpDropOff('PUDO_ORIGIN_001', 'MX002', 'merchant', 'Sucursal Origen', 'Origen', new Address('06600', 'CDMX', 'Calle 2 #456', new Coordinate(19.4326, -99.1332)), 'Lun-Vie: 09:00-18:00', [new ScheduleItem('mon', '09:00', '18:00'), new ScheduleItem('tue', '09:00', '18:00'), new ScheduleItem('wed', '09:00', '18:00'), new ScheduleItem('thu', '09:00', '18:00'), new ScheduleItem('fri', '09:00', '18:00')], '+523334445556', true, Date::from('2023-01-01T00:00:00+00:00')),
+            new PickUpDropOff('PUDO_001', 'MX001', 'pudo', 'PUDO Central', 'Punto de entrega central', new Address('44100', 'Guadalajara', 'Calle 1 #123', new Coordinate(20.67, -103.35)), 'Lun-Vie: 09:00-18:00', [new ScheduleItem('mon', '09:00', '18:00'), new ScheduleItem('tue', '09:00', '18:00'), new ScheduleItem('wed', '09:00', '18:00'), new ScheduleItem('thu', '09:00', '18:00'), new ScheduleItem('fri', '09:00', '18:00')], '+523334445556', true, Date::from('2023-01-01T00:00:00+00:00')),
             Date::from('2024-01-01T10:00:00+00:00'),
             null
         ));
@@ -318,7 +333,7 @@ class MerchantApiTest extends TestCase
                     'id' => 'PUDO_001', 'external_id' => 'MX001', 'type' => 'pudo',
                     'name' => 'PUDO Central', 'description' => 'Punto de entrega central',
                     'address' => ['postal_code' => '06600', 'city' => 'CDMX', 'address' => 'Calle 1 #123', 'coordinate' => ['latitude' => 19.4326, 'longitude' => -99.1332]],
-                    'schedule' => 'Lun-Vie: 09:00-18:00', 'enabled' => true, 'created_at' => '2023-01-01T00:00:00+00:00',
+                    'schedule' => 'Lun-Vie: 09:00-18:00', 'schedule_items' => [['day' => 'mon', 'start' => '09:00', 'end' => '18:00'], ['day' => 'tue', 'start' => '09:00', 'end' => '18:00'], ['day' => 'wed', 'start' => '09:00', 'end' => '18:00'], ['day' => 'thu', 'start' => '09:00', 'end' => '18:00'], ['day' => 'fri', 'start' => '09:00', 'end' => '18:00']], 'phone' => '+523334445556', 'enabled' => true, 'created_at' => '2023-01-01T00:00:00+00:00',
                 ],
                 'created_at' => '2024-01-01T10:00:00+00:00',
                 'expire_at' => null,
@@ -333,7 +348,7 @@ class MerchantApiTest extends TestCase
             'method' => 'POST',
             'url' => 'https://api.example.com/api/merchant/v1/MERCHANT_001/parcels/c2b',
             'body' => '{"content":{"description":"Devolucion"},"sender":{"first_name":"Juan","last_name":"Garcia","email":"juan@example.com"},"destination_id":"PUDO_001"}',
-            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::CLIENT_PHP_VERSION_HEADER_NAME => PHP_VERSION, 'Content-Type' => 'application/json', 'Authorization' => 'Bearer test-jwt-token'],
+            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::RUNTIME_HEADER_NAME => PHP_VERSION, 'Content-Type' => 'application/json', 'Authorization' => 'Bearer test-jwt-token'],
         ];
         $expectedResponse = new ParcelDetailResponse(new Parcel(
             'PARCEL_001',
@@ -341,13 +356,13 @@ class MerchantApiTest extends TestCase
             'https://example.com/qr/MXT0000000001.png',
             null,
             null,
-            new ParcelContent('Devolucion', null),
+            new ParcelContent('Devolucion', null, null, null),
             ParcelStatus::from('created'),
             [new StatusHistoryEntry(ParcelStatus::from('created'), Date::from('2024-01-01T10:00:00+00:00'))],
             new Person('Juan', 'Garcia', 'juan@example.com', null, null),
             new Person('Merchant', 'Bot', 'bot@merchant.com', null, null),
             null,
-            new PickUpDropOff('PUDO_001', 'MX001', 'PUDO Central', 'Punto de entrega central', new Address('06600', 'CDMX', 'Calle 1 #123', new Coordinate(19.4326, -99.1332)), 'Lun-Vie: 09:00-18:00', true, Date::from('2023-01-01T00:00:00+00:00')),
+            new PickUpDropOff('PUDO_001', 'MX001', 'pudo', 'PUDO Central', 'Punto de entrega central', new Address('06600', 'CDMX', 'Calle 1 #123', new Coordinate(19.4326, -99.1332)), 'Lun-Vie: 09:00-18:00', [new ScheduleItem('mon', '09:00', '18:00'), new ScheduleItem('tue', '09:00', '18:00'), new ScheduleItem('wed', '09:00', '18:00'), new ScheduleItem('thu', '09:00', '18:00'), new ScheduleItem('fri', '09:00', '18:00')], '+523334445556', true, Date::from('2023-01-01T00:00:00+00:00')),
             Date::from('2024-01-01T10:00:00+00:00'),
             null
         ));
@@ -368,10 +383,10 @@ class MerchantApiTest extends TestCase
                     'id' => 'PUDO_001', 'external_id' => 'MX001', 'type' => 'pudo',
                     'name' => 'PUDO Central', 'description' => 'Punto de entrega central',
                     'address' => ['postal_code' => '06600', 'city' => 'CDMX', 'address' => 'Calle 1 #123', 'coordinate' => ['latitude' => 19.4326, 'longitude' => -99.1332]],
-                    'schedule' => 'Lun-Vie: 09:00-18:00', 'enabled' => true, 'created_at' => '2023-01-01T00:00:00+00:00',
+                    'schedule' => 'Lun-Vie: 09:00-18:00', 'schedule_items' => [['day' => 'mon', 'start' => '09:00', 'end' => '18:00'], ['day' => 'tue', 'start' => '09:00', 'end' => '18:00'], ['day' => 'wed', 'start' => '09:00', 'end' => '18:00'], ['day' => 'thu', 'start' => '09:00', 'end' => '18:00'], ['day' => 'fri', 'start' => '09:00', 'end' => '18:00']], 'phone' => '+523334445556', 'enabled' => true, 'created_at' => '2023-01-01T00:00:00+00:00',
                 ],
             ],
-            'next' => null,
+            'next' => 'https://api.example.com/api/merchant/v1/pudos?latitude=19.4326&longitude=-99.1332&cursor=5-0',
         ];
         $response = new HttpResponse(
             200,
@@ -382,14 +397,14 @@ class MerchantApiTest extends TestCase
             'method' => 'GET',
             'url' => 'https://api.example.com/api/merchant/v1/pudos',
             'body' => null,
-            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::CLIENT_PHP_VERSION_HEADER_NAME => PHP_VERSION, 'Authorization' => 'Bearer test-jwt-token'],
+            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::RUNTIME_HEADER_NAME => PHP_VERSION, 'Authorization' => 'Bearer test-jwt-token'],
         ];
         $expectedResponse = new PudoListResponse(
             new Coordinate(19.4326, -99.1332),
             [
-                new PickUpDropOff('PUDO_001', 'MX001', 'PUDO Central', 'Punto de entrega central', new Address('06600', 'CDMX', 'Calle 1 #123', new Coordinate(19.4326, -99.1332)), 'Lun-Vie: 09:00-18:00', true, new DateTimeImmutable('2023-01-01T00:00:00+00:00')),
+                new PickUpDropOff('PUDO_001', 'MX001', 'pudo', 'PUDO Central', 'Punto de entrega central', new Address('06600', 'CDMX', 'Calle 1 #123', new Coordinate(19.4326, -99.1332)), 'Lun-Vie: 09:00-18:00', [new ScheduleItem('mon', '09:00', '18:00'), new ScheduleItem('tue', '09:00', '18:00'), new ScheduleItem('wed', '09:00', '18:00'), new ScheduleItem('thu', '09:00', '18:00'), new ScheduleItem('fri', '09:00', '18:00')], '+523334445556', true, new DateTimeImmutable('2023-01-01T00:00:00+00:00')),
             ],
-            null
+            new ListPudosRequest(new \PuntoPost\Sdk\V1\Request\DTO\Coordinate(19.4326, -99.1332), null, null, Pagination::from('5-0'))
         );
 
         $this->httpClient->queueResponse($response);
@@ -409,7 +424,7 @@ class MerchantApiTest extends TestCase
                     'id' => 'PUDO_001', 'external_id' => 'MX001', 'type' => 'pudo',
                     'name' => 'PUDO Central', 'description' => 'Punto de entrega central',
                     'address' => ['postal_code' => '06600', 'city' => 'CDMX', 'address' => 'Calle 1 #123', 'coordinate' => ['latitude' => 19.4326, 'longitude' => -99.1332]],
-                    'schedule' => 'Lun-Vie: 09:00-18:00', 'enabled' => true, 'created_at' => '2023-01-01T00:00:00+00:00',
+                    'schedule' => 'Lun-Vie: 09:00-18:00', 'schedule_items' => [['day' => 'mon', 'start' => '09:00', 'end' => '18:00'], ['day' => 'tue', 'start' => '09:00', 'end' => '18:00'], ['day' => 'wed', 'start' => '09:00', 'end' => '18:00'], ['day' => 'thu', 'start' => '09:00', 'end' => '18:00'], ['day' => 'fri', 'start' => '09:00', 'end' => '18:00']], 'phone' => '+523334445556', 'enabled' => true, 'created_at' => '2023-01-01T00:00:00+00:00',
                 ],
             ],
             'next' => 'https://api.example.com/api/merchant/v1/pudos?postal_code=06600&radius_km=5&cursor=5-0',
@@ -423,12 +438,12 @@ class MerchantApiTest extends TestCase
             'method' => 'GET',
             'url' => 'https://api.example.com/api/merchant/v1/pudos?postal_code=06600&radius_km=5',
             'body' => null,
-            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::CLIENT_PHP_VERSION_HEADER_NAME => PHP_VERSION, 'Authorization' => 'Bearer test-jwt-token'],
+            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::RUNTIME_HEADER_NAME => PHP_VERSION, 'Authorization' => 'Bearer test-jwt-token'],
         ];
         $expectedResponse = new PudoListResponse(
             new Coordinate(19.4326, -99.1332),
             [
-                new PickUpDropOff('PUDO_001', 'MX001', 'PUDO Central', 'Punto de entrega central', new Address('06600', 'CDMX', 'Calle 1 #123', new Coordinate(19.4326, -99.1332)), 'Lun-Vie: 09:00-18:00', true, new DateTimeImmutable('2023-01-01T00:00:00+00:00')),
+                new PickUpDropOff('PUDO_001', 'MX001', 'pudo', 'PUDO Central', 'Punto de entrega central', new Address('06600', 'CDMX', 'Calle 1 #123', new Coordinate(19.4326, -99.1332)), 'Lun-Vie: 09:00-18:00', [new ScheduleItem('mon', '09:00', '18:00'), new ScheduleItem('tue', '09:00', '18:00'), new ScheduleItem('wed', '09:00', '18:00'), new ScheduleItem('thu', '09:00', '18:00'), new ScheduleItem('fri', '09:00', '18:00')], '+523334445556', true, new DateTimeImmutable('2023-01-01T00:00:00+00:00')),
             ],
             new ListPudosRequest(null, '06600', 5, Pagination::from('5-0'))
         );
@@ -447,7 +462,8 @@ class MerchantApiTest extends TestCase
                 'id' => 'PUDO_001', 'external_id' => 'MX001', 'type' => 'pudo',
                 'name' => 'PUDO Central', 'description' => 'Punto de entrega central',
                 'address' => ['postal_code' => '06600', 'city' => 'CDMX', 'address' => 'Calle 1 #123', 'coordinate' => ['latitude' => 19.4326, 'longitude' => -99.1332]],
-                'schedule' => 'Lun-Vie: 09:00-18:00', 'enabled' => true, 'created_at' => '2023-01-01T00:00:00+00:00',
+                'schedule' => 'Lun-Vie: 09:00-18:00', 'schedule_items' => [['day' => 'mon', 'start' => '09:00', 'end' => '18:00'], ['day' => 'tue', 'start' => '09:00', 'end' => '18:00'], ['day' => 'wed', 'start' => '09:00', 'end' => '18:00'], ['day' => 'thu', 'start' => '09:00', 'end' => '18:00'], ['day' => 'fri', 'start' => '09:00', 'end' => '18:00']], 'phone' => '+523334445556', 'enabled' => true, 'created_at' => '2023-01-01T00:00:00+00:00',
+                'holidays' => [],
             ],
         ];
         $response = new HttpResponse(
@@ -459,10 +475,10 @@ class MerchantApiTest extends TestCase
             'method' => 'GET',
             'url' => 'https://api.example.com/api/merchant/v1/pudos/PUDO_001',
             'body' => null,
-            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::CLIENT_PHP_VERSION_HEADER_NAME => PHP_VERSION, 'Authorization' => 'Bearer test-jwt-token'],
+            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::RUNTIME_HEADER_NAME => PHP_VERSION, 'Authorization' => 'Bearer test-jwt-token'],
         ];
         $expectedResponse = new PudoDetailResponse(
-            new PickUpDropOff('PUDO_001', 'MX001', 'PUDO Central', 'Punto de entrega central', new Address('06600', 'CDMX', 'Calle 1 #123', new Coordinate(19.4326, -99.1332)), 'Lun-Vie: 09:00-18:00', true, new DateTimeImmutable('2023-01-01T00:00:00+00:00'))
+            new PickUpDropOff('PUDO_001', 'MX001', 'pudo', 'PUDO Central', 'Punto de entrega central', new Address('06600', 'CDMX', 'Calle 1 #123', new Coordinate(19.4326, -99.1332)), 'Lun-Vie: 09:00-18:00', [new ScheduleItem('mon', '09:00', '18:00'), new ScheduleItem('tue', '09:00', '18:00'), new ScheduleItem('wed', '09:00', '18:00'), new ScheduleItem('thu', '09:00', '18:00'), new ScheduleItem('fri', '09:00', '18:00')], '+523334445556', true, new DateTimeImmutable('2023-01-01T00:00:00+00:00'))
         );
 
         $this->httpClient->queueResponse($response);
@@ -486,7 +502,7 @@ class MerchantApiTest extends TestCase
                     ['id' => 'USER_001', 'username' => 'admin', 'email' => 'admin@tienda.com', 'type' => 'merchant', 'enabled' => true, 'created_at' => '2023-01-01T00:00:00+00:00'],
                 ],
                 'pudos' => [
-                    ['id' => 'PUDO_001', 'external_id' => 'MX001', 'name' => 'Sucursal 1', 'description' => 'Sucursal centro', 'address' => ['postal_code' => '06600', 'city' => 'CDMX', 'address' => 'Calle 1', 'coordinate' => ['latitude' => 19.4326, 'longitude' => -99.1332]], 'schedule' => 'Lun-Vie: 09-18', 'enabled' => true, 'created_at' => '2023-01-01T00:00:00+00:00'],
+                    ['id' => 'PUDO_001', 'external_id' => 'MX001', 'type' => 'pudo', 'name' => 'Sucursal 1', 'description' => 'Sucursal centro', 'address' => ['postal_code' => '06600', 'city' => 'CDMX', 'address' => 'Calle 1', 'coordinate' => ['latitude' => 19.4326, 'longitude' => -99.1332]], 'schedule' => 'Lun-Vie: 09-18', 'schedule_items' => [['day' => 'mon', 'start' => '09:00', 'end' => '18:00'], ['day' => 'tue', 'start' => '09:00', 'end' => '18:00'], ['day' => 'wed', 'start' => '09:00', 'end' => '18:00'], ['day' => 'thu', 'start' => '09:00', 'end' => '18:00'], ['day' => 'fri', 'start' => '09:00', 'end' => '18:00']], 'phone' => '+523334445556', 'enabled' => true, 'created_at' => '2023-01-01T00:00:00+00:00'],
                 ],
             ],
         ];
@@ -499,7 +515,7 @@ class MerchantApiTest extends TestCase
             'method' => 'GET',
             'url' => 'https://api.example.com/api/merchant/v1/merchants/MERCHANT_001',
             'body' => null,
-            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::CLIENT_PHP_VERSION_HEADER_NAME => PHP_VERSION, 'Authorization' => 'Bearer test-jwt-token'],
+            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::RUNTIME_HEADER_NAME => PHP_VERSION, 'Authorization' => 'Bearer test-jwt-token'],
         ];
         $expectedResponse = new MerchantDetailResponse(
             new Merchant(
@@ -513,7 +529,7 @@ class MerchantApiTest extends TestCase
                     new User('USER_001', 'admin', 'admin@tienda.com', UserType::from('merchant'), true, new DateTimeImmutable('2023-01-01T00:00:00+00:00')),
                 ],
                 [
-                    new PickUpDropOff('PUDO_001', 'MX001', 'Sucursal 1', 'Sucursal centro', new Address('06600', 'CDMX', 'Calle 1', new Coordinate(19.4326, -99.1332)), 'Lun-Vie: 09-18', true, new DateTimeImmutable('2023-01-01T00:00:00+00:00')),
+                    new PickUpDropOff('PUDO_001', 'MX001', 'pudo', 'Sucursal 1', 'Sucursal centro', new Address('06600', 'CDMX', 'Calle 1', new Coordinate(19.4326, -99.1332)), 'Lun-Vie: 09-18', [new ScheduleItem('mon', '09:00', '18:00'), new ScheduleItem('tue', '09:00', '18:00'), new ScheduleItem('wed', '09:00', '18:00'), new ScheduleItem('thu', '09:00', '18:00'), new ScheduleItem('fri', '09:00', '18:00')], '+523334445556', true, new DateTimeImmutable('2023-01-01T00:00:00+00:00')),
                 ]
             )
         );
@@ -537,7 +553,7 @@ class MerchantApiTest extends TestCase
             'method' => 'GET',
             'url' => 'https://api.example.com/api/merchant/v1/coverage/06600',
             'body' => null,
-            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::CLIENT_PHP_VERSION_HEADER_NAME => PHP_VERSION, 'Authorization' => 'Bearer test-jwt-token'],
+            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::RUNTIME_HEADER_NAME => PHP_VERSION, 'Authorization' => 'Bearer test-jwt-token'],
         ];
         $expectedResponse = new CoverageCheckResponse(true);
 
@@ -560,7 +576,7 @@ class MerchantApiTest extends TestCase
             'method' => 'GET',
             'url' => 'https://api.example.com/api/merchant/v1/coverage',
             'body' => null,
-            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::CLIENT_PHP_VERSION_HEADER_NAME => PHP_VERSION, 'Authorization' => 'Bearer test-jwt-token'],
+            'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::RUNTIME_HEADER_NAME => PHP_VERSION, 'Authorization' => 'Bearer test-jwt-token'],
         ];
         $expectedResponse = new CoverageListResponse(['06600', '44100', '64000']);
 
@@ -571,11 +587,11 @@ class MerchantApiTest extends TestCase
         $this->assertEquals($expectedRequest, $this->httpClient->getLastRequest());
     }
 
-    public function testGetParcelForbiddenWhenNotLoggedIn(): void
+    public function testGetParcelUnauthorizedWhenNotLoggedIn(): void
     {
-        $rawBody = '{"type":"FORBIDDEN","title":"Access denied","detail":"You do not have permission to access this resource","instance":"authentication"}';
-        $response = new HttpResponse(403, $rawBody, ['Content-Type' => 'application/json']);
-        $expectedException = PuntoPostException::fromResponse(403, $rawBody);
+        $rawBody = '{"type":"UNAUTHORIZED","title":"Access denied","detail":"You do not have permission to access this resource","instance":"authentication"}';
+        $response = new HttpResponse(401, $rawBody, ['Content-Type' => 'application/json']);
+        $expectedException = PuntoPostException::fromResponse(401, $rawBody);
         $request = new GetParcelRequest('MXT0000000001');
 
         $this->sut->setToken(null);

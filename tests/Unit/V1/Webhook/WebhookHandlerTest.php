@@ -47,6 +47,7 @@ class WebhookHandlerTest extends TestCase
                 'origin' => [
                     'id' => '30000000000000000000000004',
                     'external_id' => 'MX000003',
+                    'type' => 'pudo',
                     'name' => "John's Shop",
                     'description' => 'Grocery',
                     'address' => [
@@ -56,6 +57,8 @@ class WebhookHandlerTest extends TestCase
                         'coordinate' => ['latitude' => 31.7035, 'longitude' => -106.435],
                     ],
                     'schedule' => '',
+                    'schedule_items' => [],
+                    'phone' => '',
                     'enabled' => true,
                     'created_at' => '2025-01-13T07:37:13-06:00',
                 ],
@@ -79,6 +82,7 @@ class WebhookHandlerTest extends TestCase
                 'destination' => [
                     'id' => '30000000000000000000000004',
                     'external_id' => 'MX000003',
+                    'type' => 'pudo',
                     'name' => "John's Shop",
                     'description' => 'Grocery',
                     'address' => [
@@ -88,6 +92,8 @@ class WebhookHandlerTest extends TestCase
                         'coordinate' => ['latitude' => 31.7035, 'longitude' => -106.435],
                     ],
                     'schedule' => '',
+                    'schedule_items' => [],
+                    'phone' => '',
                     'enabled' => true,
                     'created_at' => '2025-01-13T07:37:13-06:00',
                 ],

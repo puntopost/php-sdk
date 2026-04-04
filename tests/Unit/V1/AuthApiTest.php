@@ -22,7 +22,7 @@ class AuthApiTest extends TestCase
     protected function setUp(): void
     {
         $this->httpClient = new MockHttpClient();
-        $this->sut = new AuthApi($this->httpClient, 'https://api.example.com');
+        $this->sut = new AuthApi($this->httpClient, MockHttpClient::BASE_URL);
     }
 
     public function testLoginSuccess(): void
@@ -32,7 +32,7 @@ class AuthApiTest extends TestCase
             200,
             json_encode([
                 'token' => 'auto-stored-token',
-                'expires_in' => 3600
+                'expires_in' => 3600,
             ], JSON_THROW_ON_ERROR),
             ['Content-Type' => 'application/json']
         );
@@ -43,7 +43,7 @@ class AuthApiTest extends TestCase
             'headers' => [
                 'Accept' => 'application/json',
                 PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE,
-                PuntoPostClient::CLIENT_PHP_VERSION_HEADER_NAME => PHP_VERSION,
+                PuntoPostClient::RUNTIME_HEADER_NAME => PHP_VERSION,
                 'Content-Type' => 'application/json',
             ]
         ];

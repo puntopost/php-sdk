@@ -12,25 +12,36 @@ class ParcelContentTest extends TestCase
 {
     public function testConstructorStoresValues(): void
     {
-        $content = new ParcelContent('Laptop', 1.8);
+        $content = new ParcelContent('Laptop', 1.8, null, null);
 
         $this->assertSame('Laptop', $content->getDescription());
         $this->assertSame(1.8, $content->getWeightKg());
+        $this->assertNull($content->getImageUrl());
+        $this->assertNull($content->getDeclaredValue());
     }
 
     public function testConstructorWithNullWeight(): void
     {
-        $content = new ParcelContent('Ropa', null);
+        $content = new ParcelContent('Ropa', null, null, null);
 
         $this->assertNull($content->getWeightKg());
     }
 
     public function testFromArrayWithFullPayload(): void
     {
-        $content = ParcelContent::fromArray(['description' => 'Laptop', 'weight_kg' => 1.8]);
+        $content = ParcelContent::fromArray([
+            'description' => 'Laptop',
+            'weight_kg' => 1.8,
+            'image_url' => 'https://picsum.photos/200/300',
+            'declared_value' => ['value' => 20.15, 'currency' => 'MXN'],
+        ]);
 
         $this->assertSame('Laptop', $content->getDescription());
         $this->assertSame(1.8, $content->getWeightKg());
+        $this->assertSame('https://picsum.photos/200/300', $content->getImageUrl());
+        $this->assertNotNull($content->getDeclaredValue());
+        $this->assertSame(20.15, $content->getDeclaredValue()->getValue());
+        $this->assertSame('MXN', $content->getDeclaredValue()->getCurrency());
     }
 
     public function testFromArrayWeightAsIntegerIsCastToFloat(): void
