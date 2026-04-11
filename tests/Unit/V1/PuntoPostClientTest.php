@@ -16,7 +16,7 @@ class PuntoPostClientTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->sut = new PuntoPostClient('https://api.example.com', new MockHttpClient());
+        $this->sut = new PuntoPostClient(MockHttpClient::BASE_URL, new MockHttpClient());
     }
 
     public function testAuthReturnsAuthApi(): void

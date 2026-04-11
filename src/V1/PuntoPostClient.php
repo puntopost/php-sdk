@@ -14,7 +14,7 @@ class PuntoPostClient
     public const SDK_HEADER_VALUE = 'php/' . self::SDK_VERSION;
 
     /** Sent on every API request; value is the runtime {@see PHP_VERSION} of the host application. */
-    public const CLIENT_PHP_VERSION_HEADER_NAME = 'X-PuntoPost-PHP';
+    public const RUNTIME_HEADER_NAME = 'X-PuntoPost-Runtime';
 
     private AuthApi $authApi;
     private MerchantApi $merchantApi;
