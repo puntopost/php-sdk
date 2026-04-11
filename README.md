@@ -157,11 +157,19 @@ foreach ($merchant->getUsers() as $user) { // Your users with API access
 foreach ($merchant->getPudos() as $pudo) { // Your registered depots — same model as list/detail PUDO (`PickUpDropOff`)
     echo $pudo->getId();
     echo $pudo->getExternalId();
+    echo $pudo->getType();                    // 'pudo', 'logistic' or 'merchant'
     echo $pudo->getName();
     echo $pudo->getDescription();
-    echo $pudo->getSchedule();
+    echo $pudo->getSchedule();                // opening hours as free text
+    echo $pudo->getPhone();                   // phone number
     echo $pudo->isEnabled() ? 'active' : 'inactive';
     echo $pudo->getCreatedAt()->format('Y-m-d');
+
+    foreach ($pudo->getScheduleItems() as $item) { // structured schedule
+        echo $item->getDay();   // 'mon', 'tue', ... 'sun'
+        echo $item->getStart(); // e.g. '09:00'
+        echo $item->getEnd();   // e.g. '18:00'
+    }
 }
 ```
 
@@ -239,10 +247,18 @@ $response = $client->merchant()->listPudos(
 foreach ($response->getItems() as $pudo) {
     echo $pudo->getId();                          // PUDO ID
     echo $pudo->getExternalId();                  // Short id to display
+    echo $pudo->getType();                        // 'pudo', 'logistic' or 'merchant'
     echo $pudo->getName();                       
     echo $pudo->getSchedule();                    // opening hours as free text
+    echo $pudo->getPhone();                       // phone number
     echo $pudo->isEnabled() ? 'active' : 'inactive';
     echo $pudo->getCreatedAt()->format('Y-m-d'); 
+
+    foreach ($pudo->getScheduleItems() as $item) { // structured schedule
+        echo $item->getDay();   // 'mon', 'tue', ... 'sun'
+        echo $item->getStart(); // e.g. '09:00'
+        echo $item->getEnd();   // e.g. '18:00'
+    }
 
     // address
     echo $pudo->getAddress()->getPostalCode();
@@ -331,10 +347,19 @@ $pudo = $response->getDetail();
 
 echo $pudo->getId();                          // PUDO ID
 echo $pudo->getExternalId();                  // Short id to display
+echo $pudo->getType();                        // 'pudo', 'logistic' or 'merchant'
 echo $pudo->getName();                        // display name
 echo $pudo->getSchedule();                    // opening hours as free text
+echo $pudo->getPhone();                       // phone number
 echo $pudo->isEnabled() ? 'active' : 'inactive';
 echo $pudo->getCreatedAt()->format('Y-m-d');  
+
+foreach ($pudo->getScheduleItems() as $item) { // structured schedule
+    echo $item->getDay();   // 'mon', 'tue', ... 'sun'
+    echo $item->getStart(); // e.g. '09:00'
+    echo $item->getEnd();   // e.g. '18:00'
+}
+
 echo $pudo->getAddress()->getPostalCode();
 echo $pudo->getAddress()->getCity();
 echo $pudo->getAddress()->getAddress();       // street and number
@@ -540,7 +565,13 @@ try {
 
     // content
     echo $parcel->getContent()->getDescription();
-    echo $parcel->getContent()->getWeightKg();
+    echo $parcel->getContent()->getWeightKg();      // nullable
+    echo $parcel->getContent()->getImageUrl();       // nullable
+    $declaredValue = $parcel->getContent()->getDeclaredValue(); // nullable
+    if ($declaredValue !== null) {
+        echo $declaredValue->getValue();    // e.g. 250.0
+        echo $declaredValue->getCurrency(); // e.g. 'MXN'
+    }
 
     // sender
     echo $parcel->getSender()->getFirstName();
@@ -561,11 +592,16 @@ try {
     if ($origin !== null) {
         echo $origin->getId();
         echo $origin->getExternalId();
+        echo $origin->getType();              // 'pudo', 'logistic' or 'merchant'
         echo $origin->getName();
         echo $origin->getDescription();
         echo $origin->getSchedule();
+        echo $origin->getPhone();
         echo $origin->isEnabled() ? 'active' : 'inactive';
         echo $origin->getCreatedAt()->format('Y-m-d');
+        foreach ($origin->getScheduleItems() as $item) {
+            echo $item->getDay() . ': ' . $item->getStart() . '-' . $item->getEnd();
+        }
         echo $origin->getAddress()->getPostalCode();
         echo $origin->getAddress()->getCity();
         echo $origin->getAddress()->getAddress();
@@ -580,11 +616,16 @@ try {
     $destination = $parcel->getDestination();
     echo $destination->getId();
     echo $destination->getExternalId();
+    echo $destination->getType();              // 'pudo', 'logistic' or 'merchant'
     echo $destination->getName();
     echo $destination->getDescription();
     echo $destination->getSchedule();
+    echo $destination->getPhone();
     echo $destination->isEnabled() ? 'active' : 'inactive';
     echo $destination->getCreatedAt()->format('Y-m-d');
+    foreach ($destination->getScheduleItems() as $item) {
+        echo $item->getDay() . ': ' . $item->getStart() . '-' . $item->getEnd();
+    }
     echo $destination->getAddress()->getPostalCode();
     echo $destination->getAddress()->getCity();
     echo $destination->getAddress()->getAddress();
