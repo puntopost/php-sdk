@@ -26,6 +26,7 @@ class Parcel
     private PickUpDropOff $destination;
     private DateTimeImmutable $createdAt;
     private ?DateTimeImmutable $expireAt;
+    private ?string $merchantReference;
 
     /**
      * @param StatusHistoryEntry[] $statusHistory
@@ -44,7 +45,8 @@ class Parcel
         ?PickUpDropOff $origin,
         PickUpDropOff $destination,
         DateTimeImmutable $createdAt,
-        ?DateTimeImmutable $expireAt
+        ?DateTimeImmutable $expireAt,
+        ?string $merchantReference = null
     ) {
         $this->id = $id;
         $this->tracking = $tracking;
@@ -60,6 +62,7 @@ class Parcel
         $this->destination = $destination;
         $this->createdAt = $createdAt;
         $this->expireAt = $expireAt;
+        $this->merchantReference = $merchantReference;
     }
 
     /**
@@ -94,6 +97,7 @@ class Parcel
             PickUpDropOff::fromArray(Getter::requireArray($data, 'destination', 'Parcel')),
             Date::from(Getter::requireString($data, 'created_at', 'Parcel')),
             $expireAt !== null ? Date::from($expireAt) : null,
+            Getter::optionalString($data, 'merchant_reference'),
         );
     }
 
@@ -168,5 +172,10 @@ class Parcel
     public function getExpireAt(): ?DateTimeImmutable
     {
         return $this->expireAt;
+    }
+
+    public function getMerchantReference(): ?string
+    {
+        return $this->merchantReference;
     }
 }

@@ -177,7 +177,8 @@ class MerchantApiTest extends TestCase
             new ParcelContentData('Libro', DeclaredValue::mxn(250.0), null, 1.5),
             new PersonData('Juan', 'Garcia', 'juan@example.com', '+525512345678', '06600'),
             new PersonData('Ana', 'Lopez', 'ana@example.com', '+525598765432', '44100'),
-            'PUDO_001'
+            'PUDO_001',
+            'ORDER-12345'
         );
         $data = [
             'detail' => [
@@ -201,6 +202,7 @@ class MerchantApiTest extends TestCase
                 'created_at' => '2024-01-01T10:00:00+00:00',
                 'expire_at' => null,
                 'movements' => [],
+                'merchant_reference' => 'ORDER-12345',
             ],
         ];
         $response = new HttpResponse(
@@ -211,7 +213,7 @@ class MerchantApiTest extends TestCase
         $expectedRequest = [
             'method' => 'POST',
             'url' => 'https://api.example.com/api/merchant/v1/MERCHANT_001/parcels',
-            'body' => '{"content":{"description":"Libro","value":250,"currency":"MXN","weight_kg":1.5},"sender":{"first_name":"Juan","last_name":"Garcia","email":"juan@example.com","phone":"+525512345678","postal_code":"06600"},"receiver":{"first_name":"Ana","last_name":"Lopez","email":"ana@example.com","phone":"+525598765432","postal_code":"44100"},"destination_id":"PUDO_001"}',
+            'body' => '{"content":{"description":"Libro","value":250,"currency":"MXN","weight_kg":1.5},"sender":{"first_name":"Juan","last_name":"Garcia","email":"juan@example.com","phone":"+525512345678","postal_code":"06600"},"receiver":{"first_name":"Ana","last_name":"Lopez","email":"ana@example.com","phone":"+525598765432","postal_code":"44100"},"destination_id":"PUDO_001","merchant_reference":"ORDER-12345"}',
             'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::RUNTIME_HEADER_NAME => PHP_VERSION, 'Content-Type' => 'application/json', 'Authorization' => 'Bearer test-jwt-token'],
         ];
         $expectedResponse = new ParcelDetailResponse(new Parcel(
@@ -228,7 +230,8 @@ class MerchantApiTest extends TestCase
             null,
             new PickUpDropOff('PUDO_001', 'MX001', 'pudo', 'PUDO Central', 'Punto de entrega central', new Address('06600', 'CDMX', 'Calle 1 #123', new Coordinate(19.4326, -99.1332)), 'Lun-Vie: 09:00-18:00', [new ScheduleItem('mon', '09:00', '18:00'), new ScheduleItem('tue', '09:00', '18:00'), new ScheduleItem('wed', '09:00', '18:00'), new ScheduleItem('thu', '09:00', '18:00'), new ScheduleItem('fri', '09:00', '18:00')], '+523334445556', true, Date::from('2023-01-01T00:00:00+00:00')),
             Date::from('2024-01-01T10:00:00+00:00'),
-            null
+            null,
+            'ORDER-12345'
         ));
 
         $this->httpClient->queueResponse($response);

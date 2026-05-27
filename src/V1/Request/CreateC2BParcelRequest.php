@@ -13,17 +13,20 @@ class CreateC2BParcelRequest
     private ParcelContentData $content;
     private PersonData $sender;
     private string $destinationId;
+    private ?string $merchantReference;
 
     public function __construct(
         string $merchantId,
         ParcelContentData $content,
         PersonData $sender,
-        string $destinationId
+        string $destinationId,
+        ?string $merchantReference = null
     ) {
         $this->merchantId = $merchantId;
         $this->content = $content;
         $this->sender = $sender;
         $this->destinationId = $destinationId;
+        $this->merchantReference = $merchantReference;
     }
 
     public function getMerchantId(): string
@@ -36,10 +39,16 @@ class CreateC2BParcelRequest
      */
     public function toArray(): array
     {
-        return [
+        $payload = [
             'content' => $this->content->toArray(),
             'sender' => $this->sender->toArray(),
             'destination_id' => $this->destinationId,
         ];
+
+        if ($this->merchantReference !== null) {
+            $payload['merchant_reference'] = $this->merchantReference;
+        }
+
+        return $payload;
     }
 }
