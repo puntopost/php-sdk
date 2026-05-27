@@ -15,6 +15,7 @@ use PuntoPost\Sdk\V1\Request\GetMerchantRequest;
 use PuntoPost\Sdk\V1\Request\GetParcelLabelRequest;
 use PuntoPost\Sdk\V1\Request\GetParcelRequest;
 use PuntoPost\Sdk\V1\Request\GetPudoRequest;
+use PuntoPost\Sdk\V1\Request\ListMerchantParcelsRequest;
 use PuntoPost\Sdk\V1\Request\ListPudosRequest;
 use PuntoPost\Sdk\V1\Request\MarkParcelReadyRequest;
 use PuntoPost\Sdk\V1\Response\CoverageCheckResponse;
@@ -22,6 +23,7 @@ use PuntoPost\Sdk\V1\Response\CoverageListResponse;
 use PuntoPost\Sdk\V1\Response\MerchantDetailResponse;
 use PuntoPost\Sdk\V1\Response\ParcelDetailResponse;
 use PuntoPost\Sdk\V1\Response\ParcelLabelResponse;
+use PuntoPost\Sdk\V1\Response\ParcelListResponse;
 use PuntoPost\Sdk\V1\Response\PudoDetailResponse;
 use PuntoPost\Sdk\V1\Response\PudoListResponse;
 use PuntoPost\Sdk\V1\Response\SuccessResponse;
@@ -85,6 +87,21 @@ class MerchantApi extends AbstractApi
         $response = $this->put($path, $this->authHeaders());
 
         return new SuccessResponse($response->getStatusCode());
+    }
+
+    /**
+     * Returns a paginated list of parcels for the given merchant, with optional
+     * date range, status and free-text filters.
+     *
+     * @throws ValidationException  on invalid parameters (400)
+     * @throws PuntoPostException   on authentication error (401)
+     */
+    public function listMerchantParcels(ListMerchantParcelsRequest $request): ParcelListResponse
+    {
+        $path = '/api/merchant/v1/merchants/' . rawurlencode($request->getMerchantId()) . '/parcels';
+        $response = $this->get($path, $request->toQueryParams(), $this->authHeaders());
+
+        return ParcelListResponse::fromArray($this->decodeBody($response));
     }
 
     /**
