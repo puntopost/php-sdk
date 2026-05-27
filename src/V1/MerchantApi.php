@@ -12,6 +12,7 @@ use PuntoPost\Sdk\V1\Request\CreateB2CParcelRequest;
 use PuntoPost\Sdk\V1\Request\CreateC2BParcelRequest;
 use PuntoPost\Sdk\V1\Request\CreateC2CParcelRequest;
 use PuntoPost\Sdk\V1\Request\GetMerchantRequest;
+use PuntoPost\Sdk\V1\Request\GetParcelLabelRequest;
 use PuntoPost\Sdk\V1\Request\GetParcelRequest;
 use PuntoPost\Sdk\V1\Request\GetPudoRequest;
 use PuntoPost\Sdk\V1\Request\ListPudosRequest;
@@ -20,6 +21,7 @@ use PuntoPost\Sdk\V1\Response\CoverageCheckResponse;
 use PuntoPost\Sdk\V1\Response\CoverageListResponse;
 use PuntoPost\Sdk\V1\Response\MerchantDetailResponse;
 use PuntoPost\Sdk\V1\Response\ParcelDetailResponse;
+use PuntoPost\Sdk\V1\Response\ParcelLabelResponse;
 use PuntoPost\Sdk\V1\Response\PudoDetailResponse;
 use PuntoPost\Sdk\V1\Response\PudoListResponse;
 use PuntoPost\Sdk\V1\Response\SuccessResponse;
@@ -52,6 +54,23 @@ class MerchantApi extends AbstractApi
         $response = $this->delete($path, $this->authHeaders());
 
         return new SuccessResponse($response->getStatusCode());
+    }
+
+    /**
+     * Downloads the parcel label binary (PNG or PDF, depending on the merchant configuration).
+     * Returns the raw bytes and the Content-Type reported by the server.
+     *
+     * @throws ValidationException  on invalid parameters (400)
+     * @throws PuntoPostException   on authentication error (401) or not found (404)
+     */
+    public function getParcelLabel(GetParcelLabelRequest $request): ParcelLabelResponse
+    {
+        $path = '/api/merchant/v1/parcels/' . rawurlencode($request->getIdentifier()) . '/label';
+        $headers = $this->authHeaders();
+        $headers['Accept'] = 'application/pdf, image/png';
+        $response = $this->get($path, [], $headers);
+
+        return new ParcelLabelResponse($response->getBody(), $this->extractContentType($response->getHeaders()));
     }
 
     /**
@@ -185,5 +204,22 @@ class MerchantApi extends AbstractApi
         return $this->token !== null
             ? ['Authorization' => 'Bearer ' . $this->token]
             : [];
+    }
+
+    /**
+     * @param array<string,string|string[]> $headers
+     */
+    private function extractContentType(array $headers): string
+    {
+        foreach ($headers as $name => $value) {
+            if (strcasecmp($name, 'Content-Type') === 0) {
+                $first = is_array($value) ? ($value[0] ?? '') : $value;
+                $semicolon = strpos($first, ';');
+
+                return trim($semicolon === false ? $first : substr($first, 0, $semicolon));
+            }
+        }
+
+        return '';
     }
 }

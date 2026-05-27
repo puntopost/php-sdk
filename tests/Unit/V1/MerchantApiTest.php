@@ -22,6 +22,7 @@ use PuntoPost\Sdk\V1\Request\DTO\Pagination;
 use PuntoPost\Sdk\V1\Request\DTO\ParcelContentData;
 use PuntoPost\Sdk\V1\Request\DTO\PersonData;
 use PuntoPost\Sdk\V1\Request\GetMerchantRequest;
+use PuntoPost\Sdk\V1\Request\GetParcelLabelRequest;
 use PuntoPost\Sdk\V1\Request\GetParcelRequest;
 use PuntoPost\Sdk\V1\Request\GetPudoRequest;
 use PuntoPost\Sdk\V1\Request\ListPudosRequest;
@@ -42,6 +43,7 @@ use PuntoPost\Sdk\V1\Response\Model\ScheduleItem;
 use PuntoPost\Sdk\V1\Response\Model\StatusHistoryEntry;
 use PuntoPost\Sdk\V1\Response\Model\User;
 use PuntoPost\Sdk\V1\Response\ParcelDetailResponse;
+use PuntoPost\Sdk\V1\Response\ParcelLabelResponse;
 use PuntoPost\Sdk\V1\Response\PudoDetailResponse;
 use PuntoPost\Sdk\V1\Response\PudoListResponse;
 use PuntoPost\Sdk\V1\Response\SuccessResponse;
@@ -150,6 +152,67 @@ class MerchantApiTest extends TestCase
         $this->assertEquals($expectedResponse, $this->sut->cancelParcel(new CancelParcelRequest('MXT0000000001')));
         $this->assertEquals(1, $this->httpClient->getRequestCount());
         $this->assertEquals($expectedRequest, $this->httpClient->getLastRequest());
+    }
+
+    public function testGetParcelLabelReturnsPdfBinary(): void
+    {
+        $binary = "%PDF-1.4 fake-pdf-bytes";
+        $response = new HttpResponse(
+            200,
+            $binary,
+            ['Content-Type' => 'application/pdf']
+        );
+        $expectedRequest = [
+            'method' => 'GET',
+            'url' => 'https://api.example.com/api/merchant/v1/parcels/MXT0000000001/label',
+            'body' => null,
+            'headers' => [
+                'Accept' => 'application/pdf, image/png',
+                PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE,
+                PuntoPostClient::RUNTIME_HEADER_NAME => PHP_VERSION,
+                'Authorization' => 'Bearer test-jwt-token',
+            ],
+        ];
+
+        $this->httpClient->queueResponse($response);
+
+        $result = $this->sut->getParcelLabel(new GetParcelLabelRequest('MXT0000000001'));
+
+        $this->assertEquals(new ParcelLabelResponse($binary, 'application/pdf'), $result);
+        $this->assertEquals(1, $this->httpClient->getRequestCount());
+        $this->assertEquals($expectedRequest, $this->httpClient->getLastRequest());
+    }
+
+    public function testGetParcelLabelReturnsPngBinary(): void
+    {
+        $binary = "\x89PNG\r\n\x1a\nfake-png-bytes";
+        $response = new HttpResponse(
+            200,
+            $binary,
+            ['Content-Type' => 'image/png']
+        );
+
+        $this->httpClient->queueResponse($response);
+
+        $result = $this->sut->getParcelLabel(new GetParcelLabelRequest('MXT0000000001'));
+
+        $this->assertSame($binary, $result->getContent());
+        $this->assertSame('image/png', $result->getContentType());
+    }
+
+    public function testGetParcelLabelStripsCharsetFromContentType(): void
+    {
+        $response = new HttpResponse(
+            200,
+            'fake-pdf',
+            ['Content-Type' => 'application/pdf; charset=binary']
+        );
+
+        $this->httpClient->queueResponse($response);
+
+        $result = $this->sut->getParcelLabel(new GetParcelLabelRequest('MXT0000000001'));
+
+        $this->assertSame('application/pdf', $result->getContentType());
     }
 
     public function testMarkParcelReadySuccess(): void
