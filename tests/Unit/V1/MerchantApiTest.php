@@ -91,6 +91,7 @@ class MerchantApiTest extends TestCase
                 ],
                 'created_at' => '2024-01-01T10:00:00+00:00',
                 'expire_at' => null,
+                'movements' => [],
             ],
         ];
         $response = new HttpResponse(
@@ -199,6 +200,7 @@ class MerchantApiTest extends TestCase
                 ],
                 'created_at' => '2024-01-01T10:00:00+00:00',
                 'expire_at' => null,
+                'movements' => [],
             ],
         ];
         $response = new HttpResponse(
@@ -271,6 +273,7 @@ class MerchantApiTest extends TestCase
                 ],
                 'created_at' => '2024-01-01T10:00:00+00:00',
                 'expire_at' => null,
+                'movements' => [],
             ],
         ];
         $response = new HttpResponse(
@@ -337,6 +340,7 @@ class MerchantApiTest extends TestCase
                 ],
                 'created_at' => '2024-01-01T10:00:00+00:00',
                 'expire_at' => null,
+                'movements' => [],
             ],
         ];
         $response = new HttpResponse(
