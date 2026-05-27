@@ -546,23 +546,43 @@ Downloads the printable label for a parcel. The server returns either a PNG imag
 merchant configuration; the response object exposes both the raw bytes and the actual content type so you can save the
 file or stream it back to the user.
 
-| Parameter    | Type     | Required | Description                                                         |
-|--------------|----------|----------|---------------------------------------------------------------------|
-| `identifier` | `string` | Yes      | Parcel ID, tracking number, or label — any of the three is accepted |
+> **Note:** Only **B2C parcels** have a label that can be downloaded — they are the only flow where the merchant prints
+> a shipping label. Calling this on a C2C or C2B parcel will fail because the `label` field is `null`.
+
+The most natural flow is to chain it right after creating the parcel using the static factory
+`GetParcelLabelRequest::fromParcelResponse()`, which reads `$parcel->getLabel()` for you and throws
+`InvalidArgumentException` if it is `null`:
 
 ```php
 use PuntoPost\Sdk\V1\Request\GetParcelLabelRequest;
 
-$response = $client->merchant()->getParcelLabel(new GetParcelLabelRequest(
-    'MXT0000000001' // identifier
+$parcelResponse = $client->merchant()->createB2CParcel($createRequest);
+
+$labelResponse = $client->merchant()->getParcelLabel(
+    GetParcelLabelRequest::fromParcelResponse($parcelResponse)
+);
+
+$labelResponse->getContent();     // raw binary (string) — PNG bytes or PDF bytes
+$labelResponse->getContentType(); // e.g. 'application/pdf' or 'image/png'
+$labelResponse->getExtension();   // 'pdf' or 'png' — convenience for naming the file
+
+// Save to disk
+$label = $parcelResponse->getDetail()->getLabel();
+file_put_contents("{$label}.{$labelResponse->getExtension()}", $labelResponse->getContent());
+```
+
+If you already have a `Parcel` (e.g. obtained from [Get parcel details](#get-parcel-details) or from a webhook), use
+`GetParcelLabelRequest::fromParcel($parcel)` instead. And if you only have the label identifier as a string, use the
+plain constructor:
+
+| Parameter    | Type     | Required | Description                                                         |
+|--------------|----------|----------|---------------------------------------------------------------------|
+| `identifier` | `string` | Yes      | Label identifier of the parcel (e.g. `'MXL0000000001'`)             |
+
+```php
+$labelResponse = $client->merchant()->getParcelLabel(new GetParcelLabelRequest(
+    'MXL0000000001' // identifier — the parcel's label
 ));
-
-$response->getContent();     // raw binary (string) — PNG bytes or PDF bytes
-$response->getContentType(); // e.g. 'application/pdf' or 'image/png'
-
-// Save to disk picking the right extension
-$extension = $response->getContentType() === 'application/pdf' ? 'pdf' : 'png';
-file_put_contents("label-MXT0000000001.{$extension}", $response->getContent());
 ```
 
 ### List merchant parcels
