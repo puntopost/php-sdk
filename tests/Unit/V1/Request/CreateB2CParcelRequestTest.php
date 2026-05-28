@@ -109,4 +109,31 @@ class CreateB2CParcelRequestTest extends TestCase
         $this->assertArrayHasKey('destination_id', $result);
         $this->assertCount(4, $result);
     }
+
+    public function testToArrayIncludesMerchantReferenceWhenProvided(): void
+    {
+        $request = new CreateB2CParcelRequest(
+            'MERCHANT-001',
+            new ParcelContentData('Paquete'),
+            new PersonData('Ana', 'López', 'ana@example.com'),
+            'PUDO_ORIGIN',
+            'PUDO_DEST',
+            'ORDER-12345'
+        );
+
+        $this->assertSame('ORDER-12345', $request->toArray()['merchant_reference']);
+    }
+
+    public function testToArrayOmitsMerchantReferenceWhenNull(): void
+    {
+        $request = new CreateB2CParcelRequest(
+            'MERCHANT-001',
+            new ParcelContentData('Paquete'),
+            new PersonData('Ana', 'López', 'ana@example.com'),
+            'PUDO_ORIGIN',
+            'PUDO_DEST'
+        );
+
+        $this->assertArrayNotHasKey('merchant_reference', $request->toArray());
+    }
 }

@@ -22,8 +22,10 @@ use PuntoPost\Sdk\V1\Request\DTO\Pagination;
 use PuntoPost\Sdk\V1\Request\DTO\ParcelContentData;
 use PuntoPost\Sdk\V1\Request\DTO\PersonData;
 use PuntoPost\Sdk\V1\Request\GetMerchantRequest;
+use PuntoPost\Sdk\V1\Request\GetParcelLabelRequest;
 use PuntoPost\Sdk\V1\Request\GetParcelRequest;
 use PuntoPost\Sdk\V1\Request\GetPudoRequest;
+use PuntoPost\Sdk\V1\Request\ListMerchantParcelsRequest;
 use PuntoPost\Sdk\V1\Request\ListPudosRequest;
 use PuntoPost\Sdk\V1\Request\MarkParcelReadyRequest;
 use PuntoPost\Sdk\V1\Response\CoverageCheckResponse;
@@ -36,12 +38,15 @@ use PuntoPost\Sdk\V1\Response\Model\Enum\UserType;
 use PuntoPost\Sdk\V1\Response\Model\Merchant;
 use PuntoPost\Sdk\V1\Response\Model\Parcel;
 use PuntoPost\Sdk\V1\Response\Model\ParcelContent;
+use PuntoPost\Sdk\V1\Response\Model\ParcelSummary;
 use PuntoPost\Sdk\V1\Response\Model\Person;
 use PuntoPost\Sdk\V1\Response\Model\PickUpDropOff;
 use PuntoPost\Sdk\V1\Response\Model\ScheduleItem;
 use PuntoPost\Sdk\V1\Response\Model\StatusHistoryEntry;
 use PuntoPost\Sdk\V1\Response\Model\User;
 use PuntoPost\Sdk\V1\Response\ParcelDetailResponse;
+use PuntoPost\Sdk\V1\Response\ParcelLabelResponse;
+use PuntoPost\Sdk\V1\Response\ParcelListResponse;
 use PuntoPost\Sdk\V1\Response\PudoDetailResponse;
 use PuntoPost\Sdk\V1\Response\PudoListResponse;
 use PuntoPost\Sdk\V1\Response\SuccessResponse;
@@ -91,6 +96,7 @@ class MerchantApiTest extends TestCase
                 ],
                 'created_at' => '2024-01-01T10:00:00+00:00',
                 'expire_at' => null,
+                'movements' => [],
             ],
         ];
         $response = new HttpResponse(
@@ -151,6 +157,67 @@ class MerchantApiTest extends TestCase
         $this->assertEquals($expectedRequest, $this->httpClient->getLastRequest());
     }
 
+    public function testGetParcelLabelReturnsPdfBinary(): void
+    {
+        $binary = "%PDF-1.4 fake-pdf-bytes";
+        $response = new HttpResponse(
+            200,
+            $binary,
+            ['Content-Type' => 'application/pdf']
+        );
+        $expectedRequest = [
+            'method' => 'GET',
+            'url' => 'https://api.example.com/api/merchant/v1/parcels/MXT0000000001/label',
+            'body' => null,
+            'headers' => [
+                'Accept' => 'application/pdf, image/png',
+                PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE,
+                PuntoPostClient::RUNTIME_HEADER_NAME => PHP_VERSION,
+                'Authorization' => 'Bearer test-jwt-token',
+            ],
+        ];
+
+        $this->httpClient->queueResponse($response);
+
+        $result = $this->sut->getParcelLabel(new GetParcelLabelRequest('MXT0000000001'));
+
+        $this->assertEquals(new ParcelLabelResponse($binary, 'application/pdf'), $result);
+        $this->assertEquals(1, $this->httpClient->getRequestCount());
+        $this->assertEquals($expectedRequest, $this->httpClient->getLastRequest());
+    }
+
+    public function testGetParcelLabelReturnsPngBinary(): void
+    {
+        $binary = "\x89PNG\r\n\x1a\nfake-png-bytes";
+        $response = new HttpResponse(
+            200,
+            $binary,
+            ['Content-Type' => 'image/png']
+        );
+
+        $this->httpClient->queueResponse($response);
+
+        $result = $this->sut->getParcelLabel(new GetParcelLabelRequest('MXT0000000001'));
+
+        $this->assertSame($binary, $result->getContent());
+        $this->assertSame('image/png', $result->getContentType());
+    }
+
+    public function testGetParcelLabelStripsCharsetFromContentType(): void
+    {
+        $response = new HttpResponse(
+            200,
+            'fake-pdf',
+            ['Content-Type' => 'application/pdf; charset=binary']
+        );
+
+        $this->httpClient->queueResponse($response);
+
+        $result = $this->sut->getParcelLabel(new GetParcelLabelRequest('MXT0000000001'));
+
+        $this->assertSame('application/pdf', $result->getContentType());
+    }
+
     public function testMarkParcelReadySuccess(): void
     {
         $response = new HttpResponse(204, '', []);
@@ -176,7 +243,8 @@ class MerchantApiTest extends TestCase
             new ParcelContentData('Libro', DeclaredValue::mxn(250.0), null, 1.5),
             new PersonData('Juan', 'Garcia', 'juan@example.com', '+525512345678', '06600'),
             new PersonData('Ana', 'Lopez', 'ana@example.com', '+525598765432', '44100'),
-            'PUDO_001'
+            'PUDO_001',
+            'ORDER-12345'
         );
         $data = [
             'detail' => [
@@ -199,6 +267,8 @@ class MerchantApiTest extends TestCase
                 ],
                 'created_at' => '2024-01-01T10:00:00+00:00',
                 'expire_at' => null,
+                'movements' => [],
+                'merchant_reference' => 'ORDER-12345',
             ],
         ];
         $response = new HttpResponse(
@@ -209,7 +279,7 @@ class MerchantApiTest extends TestCase
         $expectedRequest = [
             'method' => 'POST',
             'url' => 'https://api.example.com/api/merchant/v1/MERCHANT_001/parcels',
-            'body' => '{"content":{"description":"Libro","value":250,"currency":"MXN","weight_kg":1.5},"sender":{"first_name":"Juan","last_name":"Garcia","email":"juan@example.com","phone":"+525512345678","postal_code":"06600"},"receiver":{"first_name":"Ana","last_name":"Lopez","email":"ana@example.com","phone":"+525598765432","postal_code":"44100"},"destination_id":"PUDO_001"}',
+            'body' => '{"content":{"description":"Libro","value":250,"currency":"MXN","weight_kg":1.5},"sender":{"first_name":"Juan","last_name":"Garcia","email":"juan@example.com","phone":"+525512345678","postal_code":"06600"},"receiver":{"first_name":"Ana","last_name":"Lopez","email":"ana@example.com","phone":"+525598765432","postal_code":"44100"},"destination_id":"PUDO_001","merchant_reference":"ORDER-12345"}',
             'headers' => ['Accept' => 'application/json', PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE, PuntoPostClient::RUNTIME_HEADER_NAME => PHP_VERSION, 'Content-Type' => 'application/json', 'Authorization' => 'Bearer test-jwt-token'],
         ];
         $expectedResponse = new ParcelDetailResponse(new Parcel(
@@ -226,7 +296,8 @@ class MerchantApiTest extends TestCase
             null,
             new PickUpDropOff('PUDO_001', 'MX001', 'pudo', 'PUDO Central', 'Punto de entrega central', new Address('06600', 'CDMX', 'Calle 1 #123', new Coordinate(19.4326, -99.1332)), 'Lun-Vie: 09:00-18:00', [new ScheduleItem('mon', '09:00', '18:00'), new ScheduleItem('tue', '09:00', '18:00'), new ScheduleItem('wed', '09:00', '18:00'), new ScheduleItem('thu', '09:00', '18:00'), new ScheduleItem('fri', '09:00', '18:00')], '+523334445556', true, Date::from('2023-01-01T00:00:00+00:00')),
             Date::from('2024-01-01T10:00:00+00:00'),
-            null
+            null,
+            'ORDER-12345'
         ));
 
         $this->httpClient->queueResponse($response);
@@ -271,6 +342,7 @@ class MerchantApiTest extends TestCase
                 ],
                 'created_at' => '2024-01-01T10:00:00+00:00',
                 'expire_at' => null,
+                'movements' => [],
             ],
         ];
         $response = new HttpResponse(
@@ -337,6 +409,7 @@ class MerchantApiTest extends TestCase
                 ],
                 'created_at' => '2024-01-01T10:00:00+00:00',
                 'expire_at' => null,
+                'movements' => [],
             ],
         ];
         $response = new HttpResponse(
@@ -372,6 +445,112 @@ class MerchantApiTest extends TestCase
         $this->assertEquals($expectedResponse, $this->sut->createC2BParcel($request));
         $this->assertEquals(1, $this->httpClient->getRequestCount());
         $this->assertEquals($expectedRequest, $this->httpClient->getLastRequest());
+    }
+
+    public function testListMerchantParcelsWithMinimalRequestSuccess(): void
+    {
+        $pudo = [
+            'id' => 'PUDO_001', 'external_id' => 'MX001', 'type' => 'pudo',
+            'name' => 'PUDO Central', 'description' => 'Punto de entrega central',
+            'address' => ['postal_code' => '06600', 'city' => 'CDMX', 'address' => 'Calle 1 #123', 'coordinate' => ['latitude' => 19.4326, 'longitude' => -99.1332]],
+            'schedule' => 'Lun-Vie: 09:00-18:00',
+            'schedule_items' => [['day' => 'mon', 'start' => '09:00', 'end' => '18:00'], ['day' => 'tue', 'start' => '09:00', 'end' => '18:00'], ['day' => 'wed', 'start' => '09:00', 'end' => '18:00'], ['day' => 'thu', 'start' => '09:00', 'end' => '18:00'], ['day' => 'fri', 'start' => '09:00', 'end' => '18:00']],
+            'phone' => '+523334445556', 'enabled' => true, 'created_at' => '2023-01-01T00:00:00+00:00',
+        ];
+        $data = [
+            'total' => 1,
+            'items' => [
+                [
+                    'id' => 'PARCEL_001',
+                    'tracking' => 'MXT0000000001',
+                    'label' => null,
+                    'content' => ['description' => 'Libro'],
+                    'status' => 'created',
+                    'sender' => ['first_name' => 'Juan', 'last_name' => 'Garcia', 'email' => 'juan@example.com', 'phone' => null, 'postal_code' => null],
+                    'receiver' => ['first_name' => 'Ana', 'last_name' => 'Lopez', 'email' => 'ana@example.com', 'phone' => null, 'postal_code' => null],
+                    'origin' => null,
+                    'destination' => $pudo,
+                    'created_at' => '2024-01-01T10:00:00+00:00',
+                    'expire_at' => null,
+                ],
+            ],
+        ];
+        $response = new HttpResponse(
+            200,
+            json_encode($data, JSON_THROW_ON_ERROR),
+            ['Content-Type' => 'application/json']
+        );
+        $expectedRequest = [
+            'method' => 'GET',
+            'url' => 'https://api.example.com/api/merchant/v1/merchants/MERCHANT_001/parcels',
+            'body' => null,
+            'headers' => [
+                'Accept' => 'application/json',
+                PuntoPostClient::SDK_HEADER_NAME => PuntoPostClient::SDK_HEADER_VALUE,
+                PuntoPostClient::RUNTIME_HEADER_NAME => PHP_VERSION,
+                'Authorization' => 'Bearer test-jwt-token',
+            ],
+        ];
+
+        $this->httpClient->queueResponse($response);
+
+        $result = $this->sut->listMerchantParcels(new ListMerchantParcelsRequest('MERCHANT_001'));
+
+        $this->assertInstanceOf(ParcelListResponse::class, $result);
+        $this->assertSame(1, $result->getTotal());
+        $this->assertCount(1, $result->getItems());
+        $item = $result->getItems()[0];
+        $this->assertInstanceOf(ParcelSummary::class, $item);
+        $this->assertSame('PARCEL_001', $item->getId());
+        $this->assertSame('MXT0000000001', $item->getTracking());
+        $this->assertNull($item->getLabel());
+        $this->assertSame('Libro', $item->getContent()->getDescription());
+        $this->assertSame('created', $item->getStatus()->getValue());
+        $this->assertSame('Juan', $item->getSender()->getFirstName());
+        $this->assertSame('Ana', $item->getReceiver()->getFirstName());
+        $this->assertNull($item->getOrigin());
+        $this->assertSame('PUDO_001', $item->getDestination()->getId());
+        $this->assertSame('2024-01-01', $item->getCreatedAt()->format('Y-m-d'));
+        $this->assertNull($item->getExpireAt());
+        $this->assertEquals(1, $this->httpClient->getRequestCount());
+        $this->assertEquals($expectedRequest, $this->httpClient->getLastRequest());
+    }
+
+    public function testListMerchantParcelsWithAllFiltersSuccess(): void
+    {
+        $data = ['total' => 0, 'items' => []];
+        $response = new HttpResponse(
+            200,
+            json_encode($data, JSON_THROW_ON_ERROR),
+            ['Content-Type' => 'application/json']
+        );
+
+        $this->httpClient->queueResponse($response);
+
+        $request = new ListMerchantParcelsRequest(
+            'MERCHANT_001',
+            new DateTimeImmutable('2026-03-01'),
+            new DateTimeImmutable('2026-03-31'),
+            [ParcelStatus::CREATED, ParcelStatus::DELIVERED],
+            'juan',
+            100,
+            50
+        );
+
+        $this->sut->listMerchantParcels($request);
+
+        $lastRequest = $this->httpClient->getLastRequest();
+        $this->assertNotNull($lastRequest);
+        $this->assertSame('GET', $lastRequest['method']);
+        $query = parse_url($lastRequest['url'], PHP_URL_QUERY);
+        $this->assertIsString($query);
+        parse_str($query, $params);
+        $this->assertSame('2026-03-01', $params['date_min']);
+        $this->assertSame('2026-03-31', $params['date_max']);
+        $this->assertSame(['created', 'delivered'], $params['status']);
+        $this->assertSame('juan', $params['query']);
+        $this->assertSame('100', $params['limit']);
+        $this->assertSame('50', $params['offset']);
     }
 
     public function testListPudosWithoutRequestSuccess(): void

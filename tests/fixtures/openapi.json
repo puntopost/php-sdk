@@ -62,6 +62,78 @@
                 }
             }
         },
+        "/api/auth/v1/users/merchant": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Public signup of a merchant user",
+                "operationId": "post_api_auth_v1_users_merchant_creation",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "username",
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "username": {
+                                        "type": "string",
+                                        "example": "some.user"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "some.user@mail.mx"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "some_password_123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Merchant user created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthLocationUserDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Username or email already taken",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/auth/v1/users": {
             "get": {
                 "tags": [
@@ -667,7 +739,7 @@
                         "required": false,
                         "schema": {
                             "type": "array",
-                            "items": [],
+                            "items": {},
                             "default": []
                         }
                     },
@@ -677,7 +749,7 @@
                         "required": false,
                         "schema": {
                             "type": "array",
-                            "items": [],
+                            "items": {},
                             "default": []
                         }
                     },
@@ -687,8 +759,18 @@
                         "required": false,
                         "schema": {
                             "type": "array",
-                            "items": [],
+                            "items": {},
                             "default": []
+                        }
+                    },
+                    {
+                        "name": "days_last_movements",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "nullable": true,
+                            "default": null
                         }
                     },
                     {
@@ -1395,6 +1477,92 @@
                 }
             }
         },
+        "/api/merchant/v1/merchants/{merchantId}/wallet/recharges/{rechargeId}": {
+            "delete": {
+                "tags": [
+                    "Merchant API"
+                ],
+                "summary": "Cancels a started recharge for the given merchant",
+                "operationId": "delete_api_merchant_v1_merchant_wallet_recharge_cancellation",
+                "parameters": [
+                    {
+                        "name": "merchantId",
+                        "in": "path",
+                        "description": "Identifier of the merchant.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "1000000000000000000000000S"
+                        }
+                    },
+                    {
+                        "name": "rechargeId",
+                        "in": "path",
+                        "description": "Identifier of the recharge to cancel.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "50000000000000000000000001"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Recharge cancelled (or already failed)"
+                    },
+                    "400": {
+                        "description": "Invalid parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Recharge not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Recharge already confirmed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/merchant/v1/{merchantId}/parcels/b2c": {
             "post": {
                 "tags": [
@@ -1433,16 +1601,16 @@
                                             },
                                             "currency": {
                                                 "type": "string",
+                                                "nullable": true,
                                                 "enum": [
                                                     "MXN"
-                                                ],
-                                                "nullable": true
+                                                ]
                                             },
                                             "image_url": {
                                                 "type": "string",
                                                 "format": "url",
-                                                "maxLength": 1000,
-                                                "nullable": true
+                                                "nullable": true,
+                                                "maxLength": 1000
                                             },
                                             "weight_kg": {
                                                 "description": "Optional weight in kilograms",
@@ -1484,6 +1652,12 @@
                                     },
                                     "destination_id": {
                                         "type": "string"
+                                    },
+                                    "merchant_reference": {
+                                        "description": "The merchant identifier reference.",
+                                        "type": "string",
+                                        "nullable": true,
+                                        "maxLength": 100
                                     }
                                 },
                                 "type": "object"
@@ -1573,16 +1747,16 @@
                                             },
                                             "currency": {
                                                 "type": "string",
+                                                "nullable": true,
                                                 "enum": [
                                                     "MXN"
-                                                ],
-                                                "nullable": true
+                                                ]
                                             },
                                             "image_url": {
                                                 "type": "string",
                                                 "format": "url",
-                                                "maxLength": 1000,
-                                                "nullable": true
+                                                "nullable": true,
+                                                "maxLength": 1000
                                             },
                                             "weight_kg": {
                                                 "description": "Optional weight in kilograms",
@@ -1621,6 +1795,12 @@
                                     },
                                     "destination_id": {
                                         "type": "string"
+                                    },
+                                    "merchant_reference": {
+                                        "description": "The merchant identifier reference.",
+                                        "type": "string",
+                                        "nullable": true,
+                                        "maxLength": 100
                                     }
                                 },
                                 "type": "object"
@@ -1700,16 +1880,16 @@
                                             },
                                             "currency": {
                                                 "type": "string",
+                                                "nullable": true,
                                                 "enum": [
                                                     "MXN"
-                                                ],
-                                                "nullable": true
+                                                ]
                                             },
                                             "image_url": {
                                                 "type": "string",
                                                 "format": "url",
-                                                "maxLength": 1000,
-                                                "nullable": true
+                                                "nullable": true,
+                                                "maxLength": 1000
                                             },
                                             "weight_kg": {
                                                 "description": "Optional weight in kilograms",
@@ -1774,6 +1954,12 @@
                                     },
                                     "destination_id": {
                                         "type": "string"
+                                    },
+                                    "merchant_reference": {
+                                        "description": "The merchant identifier reference.",
+                                        "type": "string",
+                                        "nullable": true,
+                                        "maxLength": 100
                                     }
                                 },
                                 "type": "object"
@@ -1804,6 +1990,312 @@
                     },
                     "401": {
                         "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "402": {
+                        "description": "Insufficient wallet balance",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/merchant/v1/merchants/customer": {
+            "post": {
+                "tags": [
+                    "Merchant API"
+                ],
+                "summary": "Creates a customer merchant (with its profile and wallet) for the authenticated user",
+                "operationId": "post_api_merchant_v1_merchants_customer_creation",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "first_name",
+                                    "last_name",
+                                    "phone",
+                                    "email"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 100
+                                    },
+                                    "first_name": {
+                                        "type": "string",
+                                        "maxLength": 30
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "maxLength": 30
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 255
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Customer merchant created",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MerchantCustomerMerchantCreatedResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/merchant/v1/merchants/{merchantId}/wallet/recharges": {
+            "get": {
+                "tags": [
+                    "Merchant API"
+                ],
+                "summary": "Gets the merchant recharges (started/confirmed/failed) ordered by date desc",
+                "operationId": "get_api_merchant_v1_merchant_wallet_recharge_list",
+                "parameters": [
+                    {
+                        "name": "merchantId",
+                        "in": "path",
+                        "description": "Identifier of the merchant.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "1000000000000000000000000S"
+                        }
+                    },
+                    {
+                        "name": "status[]",
+                        "in": "query",
+                        "description": "Recharge status(es)",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "started",
+                                    "confirmed",
+                                    "failed"
+                                ]
+                            },
+                            "default": []
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Maximum recharges to return",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10,
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "description": "Starting index",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 0,
+                            "default": 0
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Merchant recharge list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MerchantRechargeListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Merchant API"
+                ],
+                "summary": "Starts a recharge (pending payment) for the given merchant using an active pack",
+                "operationId": "post_api_merchant_v1_merchant_wallet_recharge_creation",
+                "parameters": [
+                    {
+                        "name": "merchantId",
+                        "in": "path",
+                        "description": "Identifier of the merchant.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "1000000000000000000000000S"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "pack_id",
+                                    "return_urls"
+                                ],
+                                "properties": {
+                                    "pack_id": {
+                                        "type": "string",
+                                        "example": "40000000000000000000000001"
+                                    },
+                                    "return_urls": {
+                                        "required": [
+                                            "success",
+                                            "pending",
+                                            "failure"
+                                        ],
+                                        "properties": {
+                                            "success": {
+                                                "type": "string",
+                                                "example": "https://app.puntopost.mx/cuenta/recargar/retorno/success"
+                                            },
+                                            "pending": {
+                                                "type": "string",
+                                                "example": "https://app.puntopost.mx/cuenta/recargar/retorno/pending"
+                                            },
+                                            "failure": {
+                                                "type": "string",
+                                                "example": "https://app.puntopost.mx/cuenta/recargar/retorno/failure"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Recharge started",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RechargeCreatedResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Access denied",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Pack or wallet not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Recharge conflict",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1998,6 +2490,27 @@
                 "responses": {
                     "200": {
                         "description": "Ok"
+                    }
+                }
+            }
+        },
+        "/api/merchant/v1/packs": {
+            "get": {
+                "tags": [
+                    "Merchant API"
+                ],
+                "summary": "Lists the active pack catalog for the authenticated merchant.",
+                "operationId": "get_api_merchant_v1_packs_list",
+                "responses": {
+                    "200": {
+                        "description": "Active packs catalog",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MerchantPacksResponse"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -2213,6 +2726,163 @@
                         }
                     }
                 }
+            },
+            "put": {
+                "tags": [
+                    "Merchant API"
+                ],
+                "summary": "Updates the merchant",
+                "operationId": "put_api_merchant_v1_merchant_update",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Id of the merchant.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "1000000000000000000000000S"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "maxLength": 100
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Merchant updated"
+                    },
+                    "400": {
+                        "description": "Invalid payload",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Merchant not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/merchant/v1/merchants/{merchantId}/wallet/movements": {
+            "get": {
+                "tags": [
+                    "Merchant API"
+                ],
+                "summary": "Gets the merchant wallet movement history",
+                "operationId": "get_api_merchant_v1_merchant_wallet_movement_list",
+                "parameters": [
+                    {
+                        "name": "merchantId",
+                        "in": "path",
+                        "description": "Identifier of the merchant.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "1000000000000000000000000S"
+                        }
+                    },
+                    {
+                        "name": "type[]",
+                        "in": "query",
+                        "description": "Wallet movement type(s)",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "enum": [
+                                    "recharge",
+                                    "consume",
+                                    "refund",
+                                    "manual"
+                                ]
+                            },
+                            "default": []
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Maximum movements to return",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 10,
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "description": "Starting index",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 0,
+                            "default": 0
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Merchant wallet movements",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MerchantMovementListResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/api/merchant/v1/merchants/{merchantId}/parcels": {
@@ -2241,8 +2911,8 @@
                         "schema": {
                             "type": "string",
                             "format": "date",
-                            "default": null,
-                            "nullable": true
+                            "nullable": true,
+                            "default": null
                         },
                         "example": "2026-03-01"
                     },
@@ -2254,8 +2924,8 @@
                         "schema": {
                             "type": "string",
                             "format": "date",
-                            "default": null,
-                            "nullable": true
+                            "nullable": true,
+                            "default": null
                         },
                         "example": "2026-03-31"
                     },
@@ -2297,14 +2967,25 @@
                         }
                     },
                     {
+                        "name": "query",
+                        "in": "query",
+                        "description": "Substring search across tracking, content, sender full name and receiver full name",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "nullable": true,
+                            "default": null
+                        }
+                    },
+                    {
                         "name": "limit",
                         "in": "query",
                         "description": "Maximum parcels to return",
                         "required": false,
                         "schema": {
                             "type": "integer",
-                            "default": 500,
-                            "example": 500
+                            "example": 500,
+                            "default": 500
                         }
                     },
                     {
@@ -2314,8 +2995,8 @@
                         "required": false,
                         "schema": {
                             "type": "integer",
-                            "default": 0,
-                            "example": 0
+                            "example": 0,
+                            "default": 0
                         }
                     }
                 ],
@@ -2342,6 +3023,129 @@
                     },
                     "401": {
                         "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/merchant/v1/merchants/{id}/wallet": {
+            "get": {
+                "tags": [
+                    "Merchant API"
+                ],
+                "summary": "Gets the merchant wallet detail",
+                "operationId": "get_api_merchant_v1_merchant_wallet_detail",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Id of the merchant.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "1000000000000000000000000S"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Merchant wallet detail",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MerchantWalletDetailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Wallet not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/merchant/v1/parcels/{identifier}/label": {
+            "get": {
+                "tags": [
+                    "Merchant API"
+                ],
+                "summary": "Gets the parcel label file (PNG or PDF depending on the merchant configuration)",
+                "operationId": "get_api_merchant_v1_parcel_label",
+                "parameters": [
+                    {
+                        "name": "identifier",
+                        "in": "path",
+                        "description": "Identifier of the parcel. It works with id, tracking or label",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "1000000000000000000000000S"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Parcel label binary in the format configured for the merchant",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            },
+                            "image/png": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Parcel not found",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2437,6 +3241,37 @@
                 }
             }
         },
+        "/api/merchant/v1/users/merchants": {
+            "get": {
+                "tags": [
+                    "Merchant API"
+                ],
+                "summary": "Gets the merchants the authenticated user belongs to",
+                "operationId": "get_api_merchant_v1_user_merchants",
+                "responses": {
+                    "200": {
+                        "description": "User merchants",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MerchantUserMerchantsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/merchant/v1/parcels/{identifier}/ready": {
             "put": {
                 "tags": [
@@ -2482,6 +3317,96 @@
                     },
                     "404": {
                         "description": "Parcel not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/merchant/v1/merchants/{id}/profile": {
+            "put": {
+                "tags": [
+                    "Merchant API"
+                ],
+                "summary": "Updates the customer profile of a merchant",
+                "operationId": "put_api_merchant_v1_merchant_profile_update",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Id of the merchant.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "1000000000000000000000000S"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "first_name",
+                                    "last_name",
+                                    "phone",
+                                    "email"
+                                ],
+                                "properties": {
+                                    "first_name": {
+                                        "type": "string",
+                                        "maxLength": 30
+                                    },
+                                    "last_name": {
+                                        "type": "string",
+                                        "maxLength": 30
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "maxLength": 255
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "204": {
+                        "description": "Customer profile updated"
+                    },
+                    "400": {
+                        "description": "Invalid payload",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Customer profile not found",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -3819,6 +4744,27 @@
                 }
             }
         },
+        "/api/web/v1/packs": {
+            "get": {
+                "tags": [
+                    "Web API"
+                ],
+                "summary": "Lists the active pack catalog; public endpoint to allow pre-registration quoting.",
+                "operationId": "get_api_web_v1_packs_list",
+                "responses": {
+                    "200": {
+                        "description": "Active packs catalog",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/WebPacksResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/web/v1/pudos": {
             "get": {
                 "tags": [
@@ -4327,6 +5273,7 @@
                             "properties": {
                                 "day": {
                                     "type": "string",
+                                    "example": "mon",
                                     "enum": [
                                         "mon",
                                         "tue",
@@ -4335,8 +5282,7 @@
                                         "fri",
                                         "sat",
                                         "sun"
-                                    ],
-                                    "example": "mon"
+                                    ]
                                 },
                                 "start": {
                                     "type": "string",
@@ -4381,6 +5327,7 @@
                     "status",
                     "origin",
                     "destination",
+                    "route",
                     "author",
                     "created_at"
                 ],
@@ -4400,12 +5347,7 @@
                         "$ref": "#/components/schemas/LogisticLocationItem"
                     },
                     "route": {
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/LogisticRoute"
-                            }
-                        ],
-                        "nullable": true
+                        "$ref": "#/components/schemas/LogisticRoute"
                     },
                     "author": {
                         "$ref": "#/components/schemas/User"
@@ -4415,12 +5357,12 @@
                         "format": "date-time"
                     },
                     "assigned_to": {
-                        "oneOf": [
+                        "nullable": true,
+                        "allOf": [
                             {
                                 "$ref": "#/components/schemas/User"
                             }
-                        ],
-                        "nullable": true
+                        ]
                     }
                 },
                 "type": "object"
@@ -4434,7 +5376,6 @@
                     "status",
                     "origin",
                     "destination",
-                    "current_movement",
                     "created_at"
                 ],
                 "properties": {
@@ -4495,7 +5436,12 @@
                         "$ref": "#/components/schemas/LogisticLocationItem"
                     },
                     "current_movement": {
-                        "$ref": "#/components/schemas/LogisticMovement"
+                        "nullable": true,
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/LogisticMovement"
+                            }
+                        ]
                     },
                     "created_at": {
                         "type": "string",
@@ -4708,6 +5654,7 @@
                     "id",
                     "type",
                     "status",
+                    "author",
                     "created_at"
                 ],
                 "properties": {
@@ -4735,12 +5682,7 @@
                         ]
                     },
                     "author": {
-                        "oneOf": [
-                            {
-                                "$ref": "#/components/schemas/User"
-                            }
-                        ],
-                        "nullable": true
+                        "$ref": "#/components/schemas/User"
                     },
                     "created_at": {
                         "type": "string",
@@ -4878,6 +5820,7 @@
                             "properties": {
                                 "day": {
                                     "type": "string",
+                                    "example": "mon",
                                     "enum": [
                                         "mon",
                                         "tue",
@@ -4886,8 +5829,7 @@
                                         "fri",
                                         "sat",
                                         "sun"
-                                    ],
-                                    "example": "mon"
+                                    ]
                                 },
                                 "start": {
                                     "type": "string",
@@ -4915,6 +5857,35 @@
                 },
                 "type": "object"
             },
+            "MerchantMovement": {
+                "required": [
+                    "status",
+                    "origin",
+                    "destination",
+                    "created_at"
+                ],
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "in_origin",
+                            "in_transit",
+                            "in_destination"
+                        ]
+                    },
+                    "origin": {
+                        "$ref": "#/components/schemas/MerchantLocationItem"
+                    },
+                    "destination": {
+                        "$ref": "#/components/schemas/MerchantLocationItem"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
             "MerchantParcelDetail": {
                 "required": [
                     "id",
@@ -4926,6 +5897,7 @@
                     "sender",
                     "receiver",
                     "destination",
+                    "movements",
                     "created_at"
                 ],
                 "properties": {
@@ -5085,15 +6057,29 @@
                         "type": "object"
                     },
                     "origin": {
-                        "oneOf": [
+                        "nullable": true,
+                        "allOf": [
                             {
                                 "$ref": "#/components/schemas/MerchantLocationItem"
                             }
-                        ],
-                        "nullable": true
+                        ]
                     },
                     "destination": {
                         "$ref": "#/components/schemas/MerchantLocationItem"
+                    },
+                    "current_movement": {
+                        "nullable": true,
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/MerchantMovement"
+                            }
+                        ]
+                    },
+                    "movements": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/MerchantMovement"
+                        }
                     },
                     "created_at": {
                         "type": "string",
@@ -5103,6 +6089,12 @@
                         "type": "string",
                         "format": "date-time",
                         "nullable": true
+                    },
+                    "merchant_reference": {
+                        "description": "The merchant identifier reference.",
+                        "type": "string",
+                        "nullable": true,
+                        "maxLength": 100
                     }
                 },
                 "type": "object"
@@ -5129,6 +6121,167 @@
                 },
                 "type": "object"
             },
+            "MerchantCustomerMerchantCreated": {
+                "required": [
+                    "id"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "00000000000000000000000001"
+                    }
+                },
+                "type": "object"
+            },
+            "MerchantCustomerMerchantCreatedResponse": {
+                "required": [
+                    "detail"
+                ],
+                "properties": {
+                    "detail": {
+                        "$ref": "#/components/schemas/MerchantCustomerMerchantCreated"
+                    }
+                },
+                "type": "object"
+            },
+            "MerchantRechargePayment": {
+                "required": [
+                    "checkout_url",
+                    "current_status",
+                    "expires_at"
+                ],
+                "properties": {
+                    "checkout_url": {
+                        "type": "string"
+                    },
+                    "current_status": {
+                        "type": "string",
+                        "enum": [
+                            "started",
+                            "awaiting_payment",
+                            "confirmed",
+                            "failed",
+                            "expired"
+                        ]
+                    },
+                    "expires_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "MerchantRechargeItem": {
+                "required": [
+                    "id",
+                    "pack_id",
+                    "pack_name",
+                    "credits",
+                    "price",
+                    "currency",
+                    "current_status",
+                    "started_at",
+                    "updated_at"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "50000000000000000000000001"
+                    },
+                    "pack_id": {
+                        "type": "string",
+                        "example": "40000000000000000000000001"
+                    },
+                    "pack_name": {
+                        "type": "string",
+                        "example": "Pack Peque\u00f1o"
+                    },
+                    "credits": {
+                        "type": "integer",
+                        "example": 150
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 499.99
+                    },
+                    "currency": {
+                        "type": "string",
+                        "example": "MXN"
+                    },
+                    "current_status": {
+                        "type": "string",
+                        "enum": [
+                            "started",
+                            "confirmed",
+                            "failed"
+                        ]
+                    },
+                    "started_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "payment": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/MerchantRechargePayment"
+                            }
+                        ],
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "MerchantRechargeListResponse": {
+                "required": [
+                    "total",
+                    "items"
+                ],
+                "properties": {
+                    "total": {
+                        "type": "integer"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/MerchantRechargeItem"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "RechargeCreated": {
+                "required": [
+                    "recharge_id",
+                    "checkout_url"
+                ],
+                "properties": {
+                    "recharge_id": {
+                        "type": "string",
+                        "example": "00000000000000000000000001"
+                    },
+                    "checkout_url": {
+                        "type": "string",
+                        "example": "https://www.mercadopago.com.mx/checkout/v1/redirect?pref_id=1234567890-abc"
+                    }
+                },
+                "type": "object"
+            },
+            "RechargeCreatedResponse": {
+                "required": [
+                    "detail"
+                ],
+                "properties": {
+                    "detail": {
+                        "$ref": "#/components/schemas/RechargeCreated"
+                    }
+                },
+                "type": "object"
+            },
             "MerchantLocationDetail": {
                 "required": [
                     "id",
@@ -5137,7 +6290,6 @@
                     "name",
                     "description",
                     "address",
-                    "schedule",
                     "schedule_items",
                     "phone",
                     "enabled",
@@ -5203,7 +6355,8 @@
                     },
                     "schedule": {
                         "type": "string",
-                        "example": "Lun, Mar, Mie, Jue, Vie: 09:00 - 18:00."
+                        "example": "Lun, Mar, Mie, Jue, Vie: 09:00 - 18:00.",
+                        "nullable": true
                     },
                     "schedule_items": {
                         "type": "array",
@@ -5211,6 +6364,7 @@
                             "properties": {
                                 "day": {
                                     "type": "string",
+                                    "example": "mon",
                                     "enum": [
                                         "mon",
                                         "tue",
@@ -5219,8 +6373,7 @@
                                         "fri",
                                         "sat",
                                         "sun"
-                                    ],
-                                    "example": "mon"
+                                    ]
                                 },
                                 "start": {
                                     "type": "string",
@@ -5263,6 +6416,53 @@
                                 }
                             },
                             "type": "object"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "MerchantPack": {
+                "required": [
+                    "id",
+                    "name",
+                    "credits",
+                    "price",
+                    "currency"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "1000000000000000000000000P"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Pack 100"
+                    },
+                    "credits": {
+                        "type": "integer",
+                        "example": 100
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 499.99
+                    },
+                    "currency": {
+                        "type": "string",
+                        "example": "MXN"
+                    }
+                },
+                "type": "object"
+            },
+            "MerchantPacksResponse": {
+                "required": [
+                    "items"
+                ],
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/MerchantPack"
                         }
                     }
                 },
@@ -5314,6 +6514,34 @@
                 },
                 "type": "object"
             },
+            "MerchantProfile": {
+                "required": [
+                    "first_name",
+                    "last_name",
+                    "phone",
+                    "email"
+                ],
+                "properties": {
+                    "first_name": {
+                        "type": "string",
+                        "example": "Jack"
+                    },
+                    "last_name": {
+                        "type": "string",
+                        "example": "Johnson"
+                    },
+                    "phone": {
+                        "type": "string",
+                        "example": "+52122211118888"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email",
+                        "example": "jack@johnson.test"
+                    }
+                },
+                "type": "object"
+            },
             "MerchantMerchantDetail": {
                 "required": [
                     "id",
@@ -5348,6 +6576,14 @@
                     "created_at": {
                         "type": "string",
                         "format": "date-time"
+                    },
+                    "profile": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/MerchantProfile"
+                            }
+                        ],
+                        "nullable": true
                     },
                     "users": {
                         "type": "array",
@@ -5491,15 +6727,23 @@
                         "type": "object"
                     },
                     "origin": {
-                        "oneOf": [
+                        "nullable": true,
+                        "allOf": [
                             {
                                 "$ref": "#/components/schemas/MerchantLocationItem"
                             }
-                        ],
-                        "nullable": true
+                        ]
                     },
                     "destination": {
                         "$ref": "#/components/schemas/MerchantLocationItem"
+                    },
+                    "current_movement": {
+                        "nullable": true,
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/MerchantMovement"
+                            }
+                        ]
                     },
                     "created_at": {
                         "type": "string",
@@ -5509,6 +6753,162 @@
                         "type": "string",
                         "format": "date-time",
                         "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "ConsumeMovementItem": {
+                "required": [
+                    "type",
+                    "credits",
+                    "when",
+                    "details"
+                ],
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "example": "consume",
+                        "enum": [
+                            "consume"
+                        ]
+                    },
+                    "credits": {
+                        "type": "integer",
+                        "example": -1
+                    },
+                    "when": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "details": {
+                        "$ref": "#/components/schemas/MerchantParcelItem"
+                    }
+                },
+                "type": "object"
+            },
+            "RefundMovementItem": {
+                "required": [
+                    "type",
+                    "credits",
+                    "when",
+                    "details"
+                ],
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "example": "refund",
+                        "enum": [
+                            "refund"
+                        ]
+                    },
+                    "credits": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "when": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "details": {
+                        "$ref": "#/components/schemas/MerchantParcelItem"
+                    }
+                },
+                "type": "object"
+            },
+            "RechargeMovementItem": {
+                "required": [
+                    "type",
+                    "credits",
+                    "when",
+                    "details"
+                ],
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "example": "recharge",
+                        "enum": [
+                            "recharge"
+                        ]
+                    },
+                    "credits": {
+                        "type": "integer",
+                        "example": 100
+                    },
+                    "when": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "details": {
+                        "$ref": "#/components/schemas/MerchantRechargeItem"
+                    }
+                },
+                "type": "object"
+            },
+            "ManualMovementItem": {
+                "required": [
+                    "type",
+                    "credits",
+                    "when"
+                ],
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "example": "manual",
+                        "enum": [
+                            "manual"
+                        ]
+                    },
+                    "credits": {
+                        "type": "integer",
+                        "example": 50
+                    },
+                    "when": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "MerchantMovementItem": {
+                "type": "object",
+                "discriminator": {
+                    "propertyName": "type",
+                    "mapping": {
+                        "consume": "PuntoPost\\Api\\Ui\\Transformer\\Response\\Merchant\\Schema\\ConsumeMovementItem",
+                        "refund": "PuntoPost\\Api\\Ui\\Transformer\\Response\\Merchant\\Schema\\RefundMovementItem",
+                        "recharge": "PuntoPost\\Api\\Ui\\Transformer\\Response\\Merchant\\Schema\\RechargeMovementItem",
+                        "manual": "PuntoPost\\Api\\Ui\\Transformer\\Response\\Merchant\\Schema\\ManualMovementItem"
+                    }
+                },
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/ConsumeMovementItem"
+                    },
+                    {
+                        "$ref": "#/components/schemas/RefundMovementItem"
+                    },
+                    {
+                        "$ref": "#/components/schemas/RechargeMovementItem"
+                    },
+                    {
+                        "$ref": "#/components/schemas/ManualMovementItem"
+                    }
+                ]
+            },
+            "MerchantMovementListResponse": {
+                "required": [
+                    "total",
+                    "items"
+                ],
+                "properties": {
+                    "total": {
+                        "type": "integer"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/MerchantMovementItem"
+                        }
                     }
                 },
                 "type": "object"
@@ -5527,6 +6927,29 @@
                         "items": {
                             "$ref": "#/components/schemas/MerchantParcelItem"
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "MerchantWalletDetail": {
+                "required": [
+                    "balance"
+                ],
+                "properties": {
+                    "balance": {
+                        "type": "integer",
+                        "example": 0
+                    }
+                },
+                "type": "object"
+            },
+            "MerchantWalletDetailResponse": {
+                "required": [
+                    "detail"
+                ],
+                "properties": {
+                    "detail": {
+                        "$ref": "#/components/schemas/MerchantWalletDetail"
                     }
                 },
                 "type": "object"
@@ -5553,6 +6976,62 @@
                         "items": {
                             "type": "string",
                             "example": "01234"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "MerchantUserMerchantItem": {
+                "required": [
+                    "id",
+                    "name",
+                    "type",
+                    "payment_mode",
+                    "enabled",
+                    "created_at"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "1000000000000000000000000S"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Acme Corp"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "business",
+                            "customer"
+                        ]
+                    },
+                    "payment_mode": {
+                        "type": "string",
+                        "enum": [
+                            "wallet",
+                            "invoice"
+                        ]
+                    },
+                    "enabled": {
+                        "type": "boolean"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "MerchantUserMerchantsResponse": {
+                "required": [
+                    "items"
+                ],
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/MerchantUserMerchantItem"
                         }
                     }
                 },
@@ -5598,7 +7077,6 @@
                     "name",
                     "description",
                     "address",
-                    "schedule",
                     "schedule_items",
                     "enabled",
                     "created_at",
@@ -5655,7 +7133,8 @@
                     },
                     "schedule": {
                         "type": "string",
-                        "example": "Lun, Mar, Mie, Jue, Vie: 09:00 - 18:00."
+                        "example": "Lun, Mar, Mie, Jue, Vie: 09:00 - 18:00.",
+                        "nullable": true
                     },
                     "schedule_items": {
                         "type": "array",
@@ -5663,6 +7142,7 @@
                             "properties": {
                                 "day": {
                                     "type": "string",
+                                    "example": "mon",
                                     "enum": [
                                         "mon",
                                         "tue",
@@ -5671,8 +7151,7 @@
                                         "fri",
                                         "sat",
                                         "sun"
-                                    ],
-                                    "example": "mon"
+                                    ]
                                 },
                                 "start": {
                                     "type": "string",
@@ -5734,7 +7213,6 @@
                     "name",
                     "description",
                     "address",
-                    "schedule",
                     "schedule_items",
                     "enabled",
                     "created_at"
@@ -5790,7 +7268,8 @@
                     },
                     "schedule": {
                         "type": "string",
-                        "example": "Lun, Mar, Mie, Jue, Vie: 09:00 - 18:00."
+                        "example": "Lun, Mar, Mie, Jue, Vie: 09:00 - 18:00.",
+                        "nullable": true
                     },
                     "schedule_items": {
                         "type": "array",
@@ -5798,6 +7277,7 @@
                             "properties": {
                                 "day": {
                                     "type": "string",
+                                    "example": "mon",
                                     "enum": [
                                         "mon",
                                         "tue",
@@ -5806,8 +7286,7 @@
                                         "fri",
                                         "sat",
                                         "sun"
-                                    ],
-                                    "example": "mon"
+                                    ]
                                 },
                                 "start": {
                                     "type": "string",
@@ -5822,7 +7301,7 @@
                         }
                     },
                     "enabled": {
-                        "format": "boolean"
+                        "type": "boolean"
                     },
                     "created_at": {
                         "type": "string",
@@ -5976,12 +7455,12 @@
                         "type": "object"
                     },
                     "origin": {
-                        "oneOf": [
+                        "nullable": true,
+                        "allOf": [
                             {
                                 "$ref": "#/components/schemas/PudoLocationItem"
                             }
-                        ],
-                        "nullable": true
+                        ]
                     },
                     "destination": {
                         "$ref": "#/components/schemas/PudoLocationItem"
@@ -5999,7 +7478,15 @@
                 "type": "object"
             },
             "PudoLocationParcelResponse": {
-                "$ref": "#/components/schemas/PudoParcelDetail"
+                "required": [
+                    "detail"
+                ],
+                "properties": {
+                    "detail": {
+                        "$ref": "#/components/schemas/PudoParcelDetail"
+                    }
+                },
+                "type": "object"
             },
             "PudoParcelItem": {
                 "required": [
@@ -6117,12 +7604,12 @@
                         "type": "object"
                     },
                     "origin": {
-                        "oneOf": [
+                        "nullable": true,
+                        "allOf": [
                             {
                                 "$ref": "#/components/schemas/PudoLocationItem"
                             }
-                        ],
-                        "nullable": true
+                        ]
                     },
                     "destination": {
                         "$ref": "#/components/schemas/PudoLocationItem"
@@ -6234,6 +7721,53 @@
                 },
                 "type": "object"
             },
+            "WebPack": {
+                "required": [
+                    "id",
+                    "name",
+                    "credits",
+                    "price",
+                    "currency"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "1000000000000000000000000P"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Pack 100"
+                    },
+                    "credits": {
+                        "type": "integer",
+                        "example": 100
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "float",
+                        "example": 499.99
+                    },
+                    "currency": {
+                        "type": "string",
+                        "example": "MXN"
+                    }
+                },
+                "type": "object"
+            },
+            "WebPacksResponse": {
+                "required": [
+                    "items"
+                ],
+                "properties": {
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/WebPack"
+                        }
+                    }
+                },
+                "type": "object"
+            },
             "WebLocationItem": {
                 "required": [
                     "id",
@@ -6241,7 +7775,6 @@
                     "type",
                     "name",
                     "address",
-                    "schedule",
                     "schedule_items"
                 ],
                 "properties": {
@@ -6299,7 +7832,8 @@
                     },
                     "schedule": {
                         "type": "string",
-                        "example": "Lun, Mar, Mie, Jue, Vie: 09:00 - 18:00."
+                        "example": "Lun, Mar, Mie, Jue, Vie: 09:00 - 18:00.",
+                        "nullable": true
                     },
                     "schedule_items": {
                         "type": "array",
@@ -6307,6 +7841,7 @@
                             "properties": {
                                 "day": {
                                     "type": "string",
+                                    "example": "mon",
                                     "enum": [
                                         "mon",
                                         "tue",
@@ -6315,8 +7850,7 @@
                                         "fri",
                                         "sat",
                                         "sun"
-                                    ],
-                                    "example": "mon"
+                                    ]
                                 },
                                 "start": {
                                     "type": "string",
@@ -6376,7 +7910,6 @@
                     "name",
                     "address",
                     "enabled",
-                    "schedule",
                     "schedule_items"
                 ],
                 "properties": {
@@ -6433,7 +7966,8 @@
                     },
                     "schedule": {
                         "type": "string",
-                        "example": "Lun, Mar, Mie, Jue, Vie: 09:00 - 18:00."
+                        "example": "Lun, Mar, Mie, Jue, Vie: 09:00 - 18:00.",
+                        "nullable": true
                     },
                     "schedule_items": {
                         "type": "array",
@@ -6441,6 +7975,7 @@
                             "properties": {
                                 "day": {
                                     "type": "string",
+                                    "example": "mon",
                                     "enum": [
                                         "mon",
                                         "tue",
@@ -6449,8 +7984,7 @@
                                         "fri",
                                         "sat",
                                         "sun"
-                                    ],
-                                    "example": "mon"
+                                    ]
                                 },
                                 "start": {
                                     "type": "string",
@@ -6570,12 +8104,12 @@
                         }
                     },
                     "origin": {
-                        "oneOf": [
+                        "nullable": true,
+                        "allOf": [
                             {
                                 "$ref": "#/components/schemas/WebLocationItem"
                             }
-                        ],
-                        "nullable": true
+                        ]
                     },
                     "destination": {
                         "$ref": "#/components/schemas/WebLocationItem"

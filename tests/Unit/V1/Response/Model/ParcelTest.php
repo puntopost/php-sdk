@@ -56,6 +56,27 @@ class ParcelTest extends TestCase
         $this->assertSame('DEST', $parcel->getDestination()->getId());
         $this->assertSame('2024-01-15', $parcel->getCreatedAt()->format('Y-m-d'));
         $this->assertNull($parcel->getExpireAt());
+        $this->assertNull($parcel->getMerchantReference());
+    }
+
+    public function testFromArrayMerchantReferenceWhenPresent(): void
+    {
+        $data = $this->buildMinimalParcelData();
+        $data['merchant_reference'] = 'ORDER-12345';
+
+        $parcel = Parcel::fromArray($data);
+
+        $this->assertSame('ORDER-12345', $parcel->getMerchantReference());
+    }
+
+    public function testFromArrayMerchantReferenceIsNullWhenNotString(): void
+    {
+        $data = $this->buildMinimalParcelData();
+        $data['merchant_reference'] = ['ORDER-12345'];
+
+        $parcel = Parcel::fromArray($data);
+
+        $this->assertNull($parcel->getMerchantReference());
     }
 
     public function testFromArrayWithFullPayload(): void

@@ -26,9 +26,13 @@ Official PHP SDK for the PuntoPost API. Integrate parcel delivery services direc
     - [Create a C2C parcel](#create-a-c2c-parcel-consumer-to-consumer)
     - [Create a B2C parcel](#create-a-b2c-parcel-business-to-consumer)
     - [Create a C2B parcel](#create-a-c2b-parcel-consumer-to-business)
+    - [Download a parcel label](#download-a-parcel-label)
+    - [List merchant parcels](#list-merchant-parcels)
     - [Get parcel details](#get-parcel-details)
     - [Mark a parcel as ready for pickup](#mark-a-parcel-as-ready-for-pickup)
     - [Cancel a parcel](#cancel-a-parcel)
+- [Web API](#web-api)
+    - [Download a parcel tracking QR](#download-a-parcel-tracking-qr)
 - [Webhooks](#webhooks)
     - [Handling known events](#handling-known-events)
     - [Unknown or future events](#unknown-or-future-events)
@@ -374,13 +378,14 @@ A customer drops off the parcel at an origin PUDO and another customer picks it 
 
 **`CreateC2CParcelRequest`**
 
-| Parameter       | Type                | Required | Description                              |
-|-----------------|---------------------|----------|------------------------------------------|
-| `merchantId`    | `string`            | Yes      | Your Merchant ID                         |
-| `content`       | `ParcelContentData` | Yes      | Description and optional content details |
-| `sender`        | `PersonData`        | Yes      | Customer dropping off the parcel         |
-| `receiver`      | `PersonData`        | Yes      | Customer picking up the parcel           |
-| `destinationId` | `string`            | Yes      | PUDO ID where the receiver will collect  |
+| Parameter           | Type                | Required | Description                                                       |
+|---------------------|---------------------|----------|-------------------------------------------------------------------|
+| `merchantId`        | `string`            | Yes      | Your Merchant ID                                                  |
+| `content`           | `ParcelContentData` | Yes      | Description and optional content details                          |
+| `sender`            | `PersonData`        | Yes      | Customer dropping off the parcel                                  |
+| `receiver`          | `PersonData`        | Yes      | Customer picking up the parcel                                    |
+| `destinationId`     | `string`            | Yes      | PUDO ID where the receiver will collect                           |
+| `merchantReference` | `string`            | No       | Your own reference for the parcel (e.g. order ID). Max 100 chars  |
 
 **`ParcelContentData`**
 
@@ -436,7 +441,8 @@ $request = new CreateC2CParcelRequest(
         '+525587654321',                   //   phone (optional)
         '44100'                            //   postalCode (optional)
     ),
-    'DESTINATION_PUDO_ID'                  // destinationId — Pudo ID
+    'DESTINATION_PUDO_ID',                 // destinationId — Pudo ID
+    'ORDER-12345'                          // merchantReference (optional) — your order ID
 );
 
 $response = $client->merchant()->createC2CParcel($request);
@@ -455,13 +461,14 @@ The merchant drops off the parcel at their origin depot and the customer picks i
 
 **`CreateB2CParcelRequest`**
 
-| Parameter       | Type                | Required | Description                              |
-|-----------------|---------------------|----------|------------------------------------------|
-| `merchantId`    | `string`            | Yes      | Your Merchant ID                         |
-| `content`       | `ParcelContentData` | Yes      | Description and optional content details |
-| `receiver`      | `PersonData`        | Yes      | Customer picking up the parcel           |
-| `originId`      | `string`            | Yes      | Your depot - PUDO ID                     |
-| `destinationId` | `string`            | Yes      | PUDO ID where the customer collects      |
+| Parameter           | Type                | Required | Description                                                       |
+|---------------------|---------------------|----------|-------------------------------------------------------------------|
+| `merchantId`        | `string`            | Yes      | Your Merchant ID                                                  |
+| `content`           | `ParcelContentData` | Yes      | Description and optional content details                          |
+| `receiver`          | `PersonData`        | Yes      | Customer picking up the parcel                                    |
+| `originId`          | `string`            | Yes      | Your depot - PUDO ID                                              |
+| `destinationId`     | `string`            | Yes      | PUDO ID where the customer collects                               |
+| `merchantReference` | `string`            | No       | Your own reference for the parcel (e.g. order ID). Max 100 chars  |
 
 > `ParcelContentData` and `PersonData` fields are the same as in [C2C](#create-a-c2c-parcel-consumer-to-consumer).
 
@@ -483,7 +490,8 @@ $request = new CreateB2CParcelRequest(
         '+525511223344'                 // phone (optional)
     ),
     'ORIGIN_PUDO_ID',                   // originId - Your PUDO ID
-    'DESTINATION_PUDO_ID'               // destinationId - PUDO ID
+    'DESTINATION_PUDO_ID',              // destinationId - PUDO ID
+    'ORDER-12345'                       // merchantReference (optional) — your order ID
 );
 
 $response = $client->merchant()->createB2CParcel($request);
@@ -499,12 +507,13 @@ A customer drops off the parcel at an origin PUDO and the merchant picks it at h
 
 **`CreateC2BParcelRequest`**
 
-| Parameter       | Type                | Required | Description                              |
-|-----------------|---------------------|----------|------------------------------------------|
-| `merchantId`    | `string`            | Yes      | Your Merchant ID                         |
-| `content`       | `ParcelContentData` | Yes      | Description and optional content details |
-| `sender`        | `PersonData`        | Yes      | Customer sending the parcel              |
-| `destinationId` | `string`            | Yes      | Your depot - PUDO ID                     |
+| Parameter           | Type                | Required | Description                                                       |
+|---------------------|---------------------|----------|-------------------------------------------------------------------|
+| `merchantId`        | `string`            | Yes      | Your Merchant ID                                                  |
+| `content`           | `ParcelContentData` | Yes      | Description and optional content details                          |
+| `sender`            | `PersonData`        | Yes      | Customer sending the parcel                                       |
+| `destinationId`     | `string`            | Yes      | Your depot - PUDO ID                                              |
+| `merchantReference` | `string`            | No       | Your own reference for the parcel (e.g. order ID). Max 100 chars  |
 
 > `ParcelContentData` and `PersonData` fields are the same as in [C2C](#create-a-c2c-parcel-consumer-to-consumer).
 
@@ -522,7 +531,8 @@ $request = new CreateC2BParcelRequest(
         'Carlos', 'Ruiz',
         'carlos@example.com'
     ),
-    'DESTINATION_PUDO_ID'           // destinationId - Your PUDO ID
+    'DESTINATION_PUDO_ID',          // destinationId - Your PUDO ID
+    'ORDER-12345'                   // merchantReference (optional) — your order ID
 );
 
 $response = $client->merchant()->createC2BParcel($request);
@@ -531,6 +541,109 @@ $parcel   = $response->getDetail();
 
 > The returned `Parcel` object contains exactly the same fields as the response
 > from [Get parcel details](#get-parcel-details).
+
+### Download a parcel label
+
+Downloads the printable label for a parcel. The server returns either a PNG image or a PDF document depending on your
+merchant configuration; the response object exposes both the raw bytes and the actual content type so you can save the
+file or stream it back to the user.
+
+> **Note:** Only **B2C parcels** have a label that can be downloaded — they are the only flow where the merchant prints
+> a shipping label. Calling this on a C2C or C2B parcel will fail because the `label` field is `null`.
+
+The most natural flow is to chain it right after creating the parcel using the static factory
+`GetParcelLabelRequest::fromParcelResponse()`, which reads `$parcel->getLabel()` for you and throws
+`InvalidArgumentException` if it is `null`:
+
+```php
+use PuntoPost\Sdk\V1\Request\GetParcelLabelRequest;
+
+$parcelResponse = $client->merchant()->createB2CParcel($createRequest);
+
+$labelResponse = $client->merchant()->getParcelLabel(
+    GetParcelLabelRequest::fromParcelResponse($parcelResponse)
+);
+
+$labelResponse->getContent();     // raw binary (string) — PNG bytes or PDF bytes
+$labelResponse->getContentType(); // e.g. 'application/pdf' or 'image/png'
+$labelResponse->getExtension();   // 'pdf' or 'png' — convenience for naming the file
+
+// Save to disk
+$label = $parcelResponse->getDetail()->getLabel();
+file_put_contents("{$label}.{$labelResponse->getExtension()}", $labelResponse->getContent());
+```
+
+If you already have a `Parcel` (e.g. obtained from [Get parcel details](#get-parcel-details) or from a webhook), use
+`GetParcelLabelRequest::fromParcel($parcel)` instead. And if you only have the label identifier as a string, use the
+plain constructor:
+
+| Parameter    | Type     | Required | Description                                                         |
+|--------------|----------|----------|---------------------------------------------------------------------|
+| `identifier` | `string` | Yes      | Label identifier of the parcel (e.g. `'MXL0000000001'`)             |
+
+```php
+$labelResponse = $client->merchant()->getParcelLabel(new GetParcelLabelRequest(
+    'MXL0000000001' // identifier — the parcel's label
+));
+```
+
+### List merchant parcels
+
+Returns a paginated list of parcels for the given merchant. All filters are optional; when omitted, the API defaults apply
+(no date filter, no status filter, no text search, default page size).
+
+**`ListMerchantParcelsRequest`**
+
+| Parameter    | Type                 | Required | Description                                                                                       |
+|--------------|----------------------|----------|---------------------------------------------------------------------------------------------------|
+| `merchantId` | `string`             | Yes      | Your Merchant ID                                                                                  |
+| `dateMin`    | `DateTimeImmutable`  | No       | Lower bound (inclusive) on the parcel creation date. Only the `Y-m-d` portion is sent             |
+| `dateMax`    | `DateTimeImmutable`  | No       | Upper bound (inclusive) on the parcel creation date. Only the `Y-m-d` portion is sent             |
+| `statuses`   | `string[]`           | No       | Filter by one or more parcel statuses. Use the constants on `ParcelStatus`                        |
+| `query`      | `string`             | No       | Free-text search across tracking, content description, and sender/receiver full names             |
+| `limit`      | `int`                | No       | Maximum parcels to return (API default: 500)                                                      |
+| `offset`     | `int`                | No       | Starting index for pagination (API default: 0)                                                    |
+
+```php
+use PuntoPost\Sdk\V1\Request\ListMerchantParcelsRequest;
+use PuntoPost\Sdk\V1\Response\Model\Enum\ParcelStatus;
+
+$response = $client->merchant()->listMerchantParcels(new ListMerchantParcelsRequest(
+    'MERCHANT_ID',                                         // merchantId
+    new DateTimeImmutable('2026-03-01'),                   // dateMin (optional)
+    new DateTimeImmutable('2026-03-31'),                   // dateMax (optional)
+    [ParcelStatus::CREATED, ParcelStatus::IN_ORIGIN_POINT], // statuses (optional)
+    'juan',                                                // query (optional)
+    100,                                                   // limit (optional)
+    0                                                      // offset (optional)
+));
+
+echo $response->getTotal(); // total number of parcels matching the filters (across all pages)
+
+foreach ($response->getItems() as $parcel) {
+    echo $parcel->getId();
+    echo $parcel->getTracking();
+    echo $parcel->getLabel();                  // nullable
+    echo $parcel->getContent()->getDescription();
+    echo $parcel->getStatus()->getValue();
+    echo $parcel->getSender()->getFirstName();
+    echo $parcel->getReceiver()->getFirstName();
+    echo $parcel->getDestination()->getName();
+    $origin = $parcel->getOrigin();            // nullable
+    if ($origin !== null) {
+        echo $origin->getName();
+    }
+    echo $parcel->getCreatedAt()->format('Y-m-d H:i:s');
+    $expireAt = $parcel->getExpireAt();        // nullable
+    if ($expireAt !== null) {
+        echo $expireAt->format('Y-m-d H:i:s');
+    }
+}
+```
+
+> Items in the list are `ParcelSummary` objects — a lightweight view containing the same identifying/status fields as a
+> full `Parcel` detail, but without `qrTracking`, `qrLabel`, `statusHistory` or `merchantReference`. Call
+> [Get parcel details](#get-parcel-details) when you need the full payload.
 
 ### Get parcel details
 
@@ -549,11 +662,12 @@ try {
     $parcel = $response->getDetail();
 
     // identifiers & tracking
-    echo $parcel->getId();           // parcel ID
-    echo $parcel->getTracking();     // tracking number
-    echo $parcel->getQrTracking();   // URL of the PNG QR code for tracking
-    echo $parcel->getLabel();        // label identifier (nullable)
-    echo $parcel->getQrLabel();      // URL of the PNG QR code for the label (nullable)
+    echo $parcel->getId();                 // parcel ID
+    echo $parcel->getTracking();           // tracking number
+    echo $parcel->getQrTracking();         // URL of the PNG QR code for tracking
+    echo $parcel->getLabel();              // label identifier (nullable)
+    echo $parcel->getQrLabel();            // URL of the PNG QR code for the label (nullable)
+    echo $parcel->getMerchantReference();  // your own reference passed on create (nullable)
 
     // dates
     echo $parcel->getCreatedAt()->format('Y-m-d H:i:s');
@@ -737,6 +851,41 @@ try {
         echo $e->getErrorType(); // e.g. STATUS_CONFLICT
     }
 }
+```
+
+---
+
+## Web API
+
+Public endpoints that do not require authentication. Use them to expose tracking artifacts (e.g. the QR image) to your
+end users directly from your frontend or to embed them in transactional emails.
+
+### Download a parcel tracking QR
+
+Downloads the tracking QR code (PNG) for a parcel by ID, tracking number, or label. The returned value is the raw PNG
+bytes — write them to disk, stream them to the browser, or attach them to an email.
+
+| Parameter    | Type     | Required | Description                                                         |
+|--------------|----------|----------|---------------------------------------------------------------------|
+| `identifier` | `string` | Yes      | Parcel ID, tracking number, or label — any of the three is accepted |
+
+```php
+use PuntoPost\Sdk\V1\Request\GetParcelTrackingQrRequest;
+
+$png = $client->web()->getParcelTrackingQr(new GetParcelTrackingQrRequest(
+    'MXT0000000001' // identifier — parcel ID, tracking number, or label
+));
+
+file_put_contents('MXT0000000001-qr.png', $png);
+```
+
+If you already have a `Parcel` (e.g. from [Get parcel details](#get-parcel-details) or from a webhook), use the static
+factory to build the request from the parcel's tracking number:
+
+```php
+$png = $client->web()->getParcelTrackingQr(
+    GetParcelTrackingQrRequest::fromParcelResponse($parcelResponse)
+);
 ```
 
 ---

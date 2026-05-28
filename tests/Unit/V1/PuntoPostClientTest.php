@@ -9,6 +9,7 @@ use PuntoPost\Sdk\Tests\Mock\MockHttpClient;
 use PuntoPost\Sdk\V1\AuthApi;
 use PuntoPost\Sdk\V1\MerchantApi;
 use PuntoPost\Sdk\V1\PuntoPostClient;
+use PuntoPost\Sdk\V1\WebApi;
 
 class PuntoPostClientTest extends TestCase
 {
@@ -27,5 +28,10 @@ class PuntoPostClientTest extends TestCase
     public function testMerchantReturnsMerchantApi(): void
     {
         $this->assertInstanceOf(MerchantApi::class, $this->sut->merchant());
+    }
+
+    public function testWebReturnsWebApi(): void
+    {
+        $this->assertInstanceOf(WebApi::class, $this->sut->web());
     }
 }

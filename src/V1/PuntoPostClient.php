@@ -18,12 +18,14 @@ class PuntoPostClient
 
     private AuthApi $authApi;
     private MerchantApi $merchantApi;
+    private WebApi $webApi;
 
     public function __construct(string $baseUrl, ?HttpClientInterface $httpClient = null)
     {
         $client = $httpClient ?? new CurlHttpClient();
         $this->authApi = new AuthApi($client, $baseUrl);
         $this->merchantApi = new MerchantApi($client, $baseUrl);
+        $this->webApi = new WebApi($client, $baseUrl);
     }
 
     /**
@@ -59,5 +61,13 @@ class PuntoPostClient
     public function merchant(): MerchantApi
     {
         return $this->merchantApi;
+    }
+
+    /**
+     * Returns the Web API for access to public endpoints (no authentication required).
+     */
+    public function web(): WebApi
+    {
+        return $this->webApi;
     }
 }

@@ -100,4 +100,29 @@ class CreateC2BParcelRequestTest extends TestCase
         $this->assertArrayHasKey('destination_id', $result);
         $this->assertCount(3, $result);
     }
+
+    public function testToArrayIncludesMerchantReferenceWhenProvided(): void
+    {
+        $request = new CreateC2BParcelRequest(
+            'MERCHANT-001',
+            new ParcelContentData('Paquete'),
+            new PersonData('Juan', 'García', 'juan@example.com'),
+            'PUDO_DEST',
+            'ORDER-12345'
+        );
+
+        $this->assertSame('ORDER-12345', $request->toArray()['merchant_reference']);
+    }
+
+    public function testToArrayOmitsMerchantReferenceWhenNull(): void
+    {
+        $request = new CreateC2BParcelRequest(
+            'MERCHANT-001',
+            new ParcelContentData('Paquete'),
+            new PersonData('Juan', 'García', 'juan@example.com'),
+            'PUDO_DEST'
+        );
+
+        $this->assertArrayNotHasKey('merchant_reference', $request->toArray());
+    }
 }
