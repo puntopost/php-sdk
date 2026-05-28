@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// Required env: HOST, USERNAME, PASSWORD
+// Required env: PP_HOST, PP_USERNAME, PP_PASSWORD
 
 require __DIR__ . '/bootstrap.php';
 

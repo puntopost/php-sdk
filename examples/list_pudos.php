@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-// Required env: HOST, USERNAME, PASSWORD
+// Required env: PP_HOST, PP_USERNAME, PP_PASSWORD
 // Interactively prompts for an optional filter (postal code or coordinates)
 // and an optional search radius.
 

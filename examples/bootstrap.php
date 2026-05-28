@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 // Shared bootstrap for all example scripts under examples/.
-// Reads HOST / USERNAME / PASSWORD from the environment and returns a logged-in
-// PuntoPostClient. Endpoint-specific scripts get their own env vars on top
-// (MERCHANT_ID, PARCEL_ID, etc.) via env_required() / env_optional().
+// Reads PP_HOST / PP_USERNAME / PP_PASSWORD from the environment and returns a
+// logged-in PuntoPostClient. Endpoint-specific scripts get their own env vars on
+// top (PP_MERCHANT_ID, etc.) via env_required() / env_optional().
 
 require __DIR__ . '/../vendor/autoload.php';
 

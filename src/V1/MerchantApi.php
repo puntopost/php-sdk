@@ -233,7 +233,7 @@ class MerchantApi extends AbstractApi
                 $first = is_array($value) ? ($value[0] ?? '') : $value;
                 $semicolon = strpos($first, ';');
 
-                return trim($semicolon === false ? $first : substr($first, 0, $semicolon));
+                return strtolower(trim($semicolon === false ? $first : substr($first, 0, $semicolon)));
             }
         }
 
