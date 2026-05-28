@@ -11,6 +11,7 @@ use PuntoPost\Sdk\V1\Request\DTO\DeclaredValue;
 use PuntoPost\Sdk\V1\Request\DTO\ParcelContentData;
 use PuntoPost\Sdk\V1\Request\DTO\PersonData;
 use PuntoPost\Sdk\V1\Request\GetParcelLabelRequest;
+use PuntoPost\Sdk\V1\Request\GetParcelTrackingQrRequest;
 
 $client = create_client();
 $merchantId = env_required('PP_MERCHANT_ID');
@@ -47,4 +48,16 @@ dump_pretty([
     'extension' => $labelResponse->getExtension(),
     'bytes' => strlen($labelResponse->getContent()),
     'savedTo' => $path,
+]);
+
+// Chain: download the tracking QR that the API just generated.
+$qrPng = $client->web()->getParcelTrackingQr(
+    GetParcelTrackingQrRequest::fromParcelResponse($response)
+);
+$qrPath = "{$outDir}/{$response->getDetail()->getTracking()}-qr.png";
+file_put_contents($qrPath, $qrPng);
+
+dump_pretty([
+    'bytes' => strlen($qrPng),
+    'savedTo' => $qrPath,
 ]);

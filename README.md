@@ -31,6 +31,8 @@ Official PHP SDK for the PuntoPost API. Integrate parcel delivery services direc
     - [Get parcel details](#get-parcel-details)
     - [Mark a parcel as ready for pickup](#mark-a-parcel-as-ready-for-pickup)
     - [Cancel a parcel](#cancel-a-parcel)
+- [Web API](#web-api)
+    - [Download a parcel tracking QR](#download-a-parcel-tracking-qr)
 - [Webhooks](#webhooks)
     - [Handling known events](#handling-known-events)
     - [Unknown or future events](#unknown-or-future-events)
@@ -849,6 +851,41 @@ try {
         echo $e->getErrorType(); // e.g. STATUS_CONFLICT
     }
 }
+```
+
+---
+
+## Web API
+
+Public endpoints that do not require authentication. Use them to expose tracking artifacts (e.g. the QR image) to your
+end users directly from your frontend or to embed them in transactional emails.
+
+### Download a parcel tracking QR
+
+Downloads the tracking QR code (PNG) for a parcel by ID, tracking number, or label. The returned value is the raw PNG
+bytes — write them to disk, stream them to the browser, or attach them to an email.
+
+| Parameter    | Type     | Required | Description                                                         |
+|--------------|----------|----------|---------------------------------------------------------------------|
+| `identifier` | `string` | Yes      | Parcel ID, tracking number, or label — any of the three is accepted |
+
+```php
+use PuntoPost\Sdk\V1\Request\GetParcelTrackingQrRequest;
+
+$png = $client->web()->getParcelTrackingQr(new GetParcelTrackingQrRequest(
+    'MXT0000000001' // identifier — parcel ID, tracking number, or label
+));
+
+file_put_contents('MXT0000000001-qr.png', $png);
+```
+
+If you already have a `Parcel` (e.g. from [Get parcel details](#get-parcel-details) or from a webhook), use the static
+factory to build the request from the parcel's tracking number:
+
+```php
+$png = $client->web()->getParcelTrackingQr(
+    GetParcelTrackingQrRequest::fromParcelResponse($parcelResponse)
+);
 ```
 
 ---
