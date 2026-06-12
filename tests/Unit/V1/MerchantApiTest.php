@@ -674,8 +674,6 @@ class MerchantApiTest extends TestCase
                 'id' => 'MERCHANT_001',
                 'name' => 'Mi Tienda',
                 'enabled' => true,
-                'webhook_enabled' => false,
-                'webhook_url' => null,
                 'created_at' => '2023-01-01T00:00:00+00:00',
                 'users' => [
                     ['id' => 'USER_001', 'username' => 'admin', 'email' => 'admin@tienda.com', 'type' => 'merchant', 'enabled' => true, 'created_at' => '2023-01-01T00:00:00+00:00'],
@@ -701,8 +699,6 @@ class MerchantApiTest extends TestCase
                 'MERCHANT_001',
                 'Mi Tienda',
                 true,
-                false,
-                null,
                 '2023-01-01T00:00:00+00:00',
                 [
                     new User('USER_001', 'admin', 'admin@tienda.com', UserType::from('merchant'), true, new DateTimeImmutable('2023-01-01T00:00:00+00:00')),

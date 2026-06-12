@@ -13,7 +13,7 @@ class MerchantDetailResponseTest extends TestCase
 {
     public function testConstructorStoresDetail(): void
     {
-        $merchant = new Merchant('M1', 'Tienda', true, false, null, '2024-01-01', [], []);
+        $merchant = new Merchant('M1', 'Tienda', true, '2024-01-01', [], []);
         $response = new MerchantDetailResponse($merchant);
 
         $this->assertSame($merchant, $response->getDetail());
@@ -24,7 +24,7 @@ class MerchantDetailResponseTest extends TestCase
         $response = MerchantDetailResponse::fromArray([
             'detail' => [
                 'id' => 'M1', 'name' => 'Tienda', 'enabled' => true,
-                'webhook_enabled' => false, 'created_at' => '2024-01-01', 'users' => [], 'pudos' => [],
+                'created_at' => '2024-01-01', 'users' => [], 'pudos' => [],
             ],
         ]);
 
