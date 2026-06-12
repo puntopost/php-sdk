@@ -147,8 +147,6 @@ $merchant = $response->getDetail();
 echo $merchant->getId();
 echo $merchant->getName();
 echo $merchant->isEnabled() ? 'active' : 'inactive';
-echo $merchant->isWebhookEnabled() ? 'webhook on' : 'webhook off';
-echo $merchant->getWebhookUrl(); // Your webhook url (nullable)
 
 foreach ($merchant->getUsers() as $user) { // Your users with API access
     echo $user->getId();

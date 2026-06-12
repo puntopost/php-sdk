@@ -11,8 +11,6 @@ class Merchant
     private string $id;
     private string $name;
     private bool $enabled;
-    private bool $webhookEnabled;
-    private ?string $webhookUrl;
     private string $createdAt;
     /** @var User[] */
     private array $users;
@@ -27,8 +25,6 @@ class Merchant
         string $id,
         string $name,
         bool $enabled,
-        bool $webhookEnabled,
-        ?string $webhookUrl,
         string $createdAt,
         array $users,
         array $pudos
@@ -36,8 +32,6 @@ class Merchant
         $this->id = $id;
         $this->name = $name;
         $this->enabled = $enabled;
-        $this->webhookEnabled = $webhookEnabled;
-        $this->webhookUrl = $webhookUrl;
         $this->createdAt = $createdAt;
         $this->users = $users;
         $this->pudos = $pudos;
@@ -70,8 +64,6 @@ class Merchant
             Getter::requireString($data, 'id', 'Merchant'),
             Getter::requireString($data, 'name', 'Merchant'),
             Getter::requireBool($data, 'enabled', 'Merchant'),
-            Getter::requireBool($data, 'webhook_enabled', 'Merchant'),
-            Getter::optionalString($data, 'webhook_url'),
             Getter::requireString($data, 'created_at', 'Merchant'),
             $users,
             $pudos
@@ -91,16 +83,6 @@ class Merchant
     public function isEnabled(): bool
     {
         return $this->enabled;
-    }
-
-    public function isWebhookEnabled(): bool
-    {
-        return $this->webhookEnabled;
-    }
-
-    public function getWebhookUrl(): ?string
-    {
-        return $this->webhookUrl;
     }
 
     public function getCreatedAt(): string

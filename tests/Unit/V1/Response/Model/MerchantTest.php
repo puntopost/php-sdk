@@ -20,13 +20,11 @@ class MerchantTest extends TestCase
     {
         $user = new User('UID1', 'jdoe', 'j@e.com', UserType::from('merchant'), true, new DateTimeImmutable('2024-01-01T00:00:00+00:00'));
         $pudo = new PickUpDropOff('P1', 'EP1', 'pudo', 'Central', '', new Address('06600', 'CDMX', 'Calle 1', new Coordinate(19.4326, -99.1332)), 'Lun-Vie', [], '', true, new DateTimeImmutable('2024-01-01T00:00:00+00:00'));
-        $merchant = new Merchant('MID1', 'Mi Tienda', true, false, null, '2024-01-01T00:00:00+00:00', [$user], [$pudo]);
+        $merchant = new Merchant('MID1', 'Mi Tienda', true, '2024-01-01T00:00:00+00:00', [$user], [$pudo]);
 
         $this->assertSame('MID1', $merchant->getId());
         $this->assertSame('Mi Tienda', $merchant->getName());
         $this->assertTrue($merchant->isEnabled());
-        $this->assertFalse($merchant->isWebhookEnabled());
-        $this->assertNull($merchant->getWebhookUrl());
         $this->assertCount(1, $merchant->getUsers());
         $this->assertCount(1, $merchant->getPudos());
     }
@@ -37,8 +35,6 @@ class MerchantTest extends TestCase
             'id' => 'MID1',
             'name' => 'Mi Tienda',
             'enabled' => true,
-            'webhook_enabled' => true,
-            'webhook_url' => 'https://example.com/webhook',
             'created_at' => '2024-01-01T00:00:00+00:00',
             'users' => [
                 ['id' => 'UID1', 'username' => 'jdoe', 'email' => 'j@e.com', 'type' => 'merchant', 'enabled' => true, 'created_at' => '2024-01-01T00:00:00+00:00'],
@@ -51,19 +47,10 @@ class MerchantTest extends TestCase
         $this->assertSame('MID1', $merchant->getId());
         $this->assertSame('Mi Tienda', $merchant->getName());
         $this->assertTrue($merchant->isEnabled());
-        $this->assertTrue($merchant->isWebhookEnabled());
-        $this->assertSame('https://example.com/webhook', $merchant->getWebhookUrl());
         $this->assertCount(1, $merchant->getUsers());
         $this->assertSame('jdoe', $merchant->getUsers()[0]->getUsername());
         $this->assertCount(1, $merchant->getPudos());
         $this->assertSame('P1', $merchant->getPudos()[0]->getId());
-    }
-
-    public function testFromArrayWithoutWebhookUrlIsNull(): void
-    {
-        $merchant = Merchant::fromArray(['id' => 'M1', 'name' => 'T', 'enabled' => true, 'webhook_enabled' => false, 'created_at' => '2024-01-01T00:00:00+00:00', 'users' => [], 'pudos' => []]);
-
-        $this->assertNull($merchant->getWebhookUrl());
     }
 
     public function testFromArrayWithEmptyArrayThrows(): void
@@ -82,7 +69,6 @@ class MerchantTest extends TestCase
             'id' => 'M1',
             'name' => 'T',
             'enabled' => true,
-            'webhook_enabled' => false,
             'created_at' => '2024-01-01T00:00:00+00:00',
             'users' => ['not_array_1', 99, null, true],
             'pudos' => [],
@@ -98,7 +84,6 @@ class MerchantTest extends TestCase
             'id' => 'M1',
             'name' => 'T',
             'enabled' => true,
-            'webhook_enabled' => false,
             'created_at' => '2024-01-01T00:00:00+00:00',
             'users' => [],
             'pudos' => ['string_pudo', 42, false],
@@ -108,7 +93,7 @@ class MerchantTest extends TestCase
     public function testFromArrayUsersBuildRecursively(): void
     {
         $merchant = Merchant::fromArray([
-            'id' => 'M1', 'name' => 'T', 'enabled' => true, 'webhook_enabled' => false, 'created_at' => '2024-01-01T00:00:00+00:00',
+            'id' => 'M1', 'name' => 'T', 'enabled' => true, 'created_at' => '2024-01-01T00:00:00+00:00',
             'users' => [
                 ['id' => 'U1', 'username' => 'alice', 'email' => 'a@e.com', 'type' => 'staff', 'enabled' => true, 'created_at' => '2024-01-01T00:00:00+00:00'],
                 ['id' => 'U2', 'username' => 'bob', 'email' => 'b@e.com', 'type' => 'operator', 'enabled' => false, 'created_at' => '2024-01-02T00:00:00+00:00'],
@@ -129,8 +114,6 @@ class MerchantTest extends TestCase
             'id' => ['array_id'],
             'name' => 999,
             'enabled' => 'yes',
-            'webhook_enabled' => 1,
-            'webhook_url' => 12345,
             'created_at' => '2024-01-01',
             'users' => [],
             'pudos' => [],

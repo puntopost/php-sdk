@@ -6547,7 +6547,6 @@
                     "id",
                     "name",
                     "enabled",
-                    "webhook_enabled",
                     "created_at",
                     "users",
                     "pudos"
@@ -6563,15 +6562,6 @@
                     },
                     "enabled": {
                         "type": "boolean"
-                    },
-                    "webhook_enabled": {
-                        "type": "boolean"
-                    },
-                    "webhook_url": {
-                        "type": "string",
-                        "format": "uri",
-                        "example": "https://my-merchant.com/webhook?token=abc123",
-                        "nullable": true
                     },
                     "created_at": {
                         "type": "string",
