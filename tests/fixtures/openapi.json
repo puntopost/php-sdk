@@ -524,7 +524,8 @@
                                             "shipment_lost",
                                             "lack_of_time",
                                             "shipment_damaged",
-                                            "pending_activation"
+                                            "pending_activation",
+                                            "pudo_not_trained"
                                         ]
                                     }
                                 },
@@ -3450,7 +3451,8 @@
                                             "shipment_lost",
                                             "lack_of_time",
                                             "shipment_damaged",
-                                            "pending_activation"
+                                            "pending_activation",
+                                            "pudo_not_trained"
                                         ]
                                     },
                                     "resource_id": {
@@ -3522,7 +3524,8 @@
                                             "shipment_lost",
                                             "lack_of_time",
                                             "shipment_damaged",
-                                            "pending_activation"
+                                            "pending_activation",
+                                            "pudo_not_trained"
                                         ]
                                     },
                                     "resource_id": {
@@ -5671,7 +5674,8 @@
                             "shipment_lost",
                             "lack_of_time",
                             "shipment_damaged",
-                            "pending_activation"
+                            "pending_activation",
+                            "pudo_not_trained"
                         ]
                     },
                     "status": {
