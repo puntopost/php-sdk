@@ -2,6 +2,8 @@
 
 Official PHP SDK for the PuntoPost parcel delivery API. Published on Packagist as `puntopost/php-sdk`.
 
+**Deprecated.** This SDK is no longer maintained: no new features, improvements or support for new API features. Do not propose changes here; merchants should integrate with the PuntoPost API directly ([OpenAPI spec](https://back.puntopost.mx/api/doc/merchant.json)).
+
 ## Architecture
 
 - `src/V1/` — SDK source code, versioned by API version
