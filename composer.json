@@ -1,6 +1,7 @@
 {
   "name": "puntopost/php-sdk",
-  "description": "Official PHP SDK for the PuntoPost parcel delivery API",
+  "description": "Deprecated: official PHP SDK for the PuntoPost parcel delivery API. No longer maintained; call the PuntoPost API directly.",
+  "abandoned": true,
   "type": "library",
   "license": "MIT",
   "keywords": [
